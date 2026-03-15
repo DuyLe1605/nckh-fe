@@ -24,19 +24,21 @@
 - [x] Tạo socket hook `useAuctionSocket`
 - [x] Tạo constants cho app-level values
 - [x] Thiết lập `.env.local` + `.env.example`
-- [ ] Thiết lập Axios base client + interceptors chuẩn
-- [ ] Thiết lập TanStack Query provider + query key conventions
-- [ ] Thiết lập Zustand stores nền tảng cho UI/client state
+- [x] Thiết lập Axios base client + interceptors chuẩn
+- [x] Thiết lập TanStack Query provider + query key conventions
+- [x] Thiết lập Zustand stores nền tảng cho UI/client state
+- [x] Thiết lập dark mode bằng next-themes + theme toggle
+- [x] Cài react-hook-form + zod cho form validation pipeline
 
 ## Sprint 2 — Auth UX + Route Guard
 
-- [ ] Form login/register
-- [ ] Luồng token/cookie handling an toàn
+- [~] Form login/register
+- [~] Luồng token/cookie handling an toàn
 - [ ] Middleware role guard hoàn chỉnh
 - [ ] Client-side fallback guard + redirect UX
 - [ ] Trang profile/session state cơ bản
-- [ ] Auth API integration bằng Axios + TanStack Query mutations
-- [ ] Auth/session UI state bằng Zustand (không lưu dữ liệu nhạy cảm)
+- [~] Auth API integration bằng Axios + TanStack Query mutations
+- [~] Auth/session UI state bằng Zustand (không lưu dữ liệu nhạy cảm)
 
 ## Sprint 3 — Public Auction Browsing
 
@@ -92,13 +94,16 @@
 
 ### In Progress
 
-- [~] Chuẩn hóa rule middleware static matcher và route-group conventions (file `FE/instructions.md`)
+- [~] Hoàn thiện Sprint 2 auth flow (cookie strategy, role redirects, session profile page)
+- [~] Chuẩn hóa rule middleware static matcher và route-group conventions (file `FE/documents/instructions.md`)
 
 ### Next up
 
-- [ ] Bắt đầu Sprint 2: auth UI + middleware guard hoàn chỉnh
+- [ ] Chốt API contract auth với BE (token/refresh/role payload)
+- [ ] Bổ sung profile/session page và logout flow
 
 ### Done
 
 - [x] Hoàn thành frontend scaffolding Sprint 1
 - [x] Cấu hình thành công Tailwind + shadcn/ui + pnpm
+- [x] Khởi động Sprint 2 với modern auth UI + dark mode + data layer foundation

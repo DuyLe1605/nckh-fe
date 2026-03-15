@@ -9,6 +9,8 @@
 - Package manager: **pnpm**.
 - UI system: Tailwind CSS + shadcn/ui.
 - Data fetching/state stack: **TanStack Query** + **Axios** + **Zustand**.
+- Form/validation stack: **react-hook-form** + **zod**.
+- Theme stack: **next-themes** cho dark/light mode.
 - Phân tách route theo nhóm `(public)` và `(protected)` + role zones `(bidder)/(seller)/(admin)`.
 
 ## 2) Cấu trúc thư mục & boundaries
@@ -83,6 +85,15 @@
 - Class Tailwind cần nhất quán spacing/typography theo design token hiện có.
 - Tránh duplicate component khi có thể tái sử dụng.
 - Các value lặp lại (timeout, pagination defaults, debounce ms) đưa vào `src/constants/**`.
+- Bắt buộc hỗ trợ dark mode cho toàn bộ trang public/protected chính, không chỉ đổi màu nền.
+- Visual style ưu tiên hiện đại: depth (shadow/layer), gradient tiết chế, micro-interaction rõ ràng.
+
+## 10.1) Form & validation conventions
+
+- Form auth/critical flow dùng `react-hook-form` để quản lý field state/submit.
+- Validation schema dùng `zod`; tách schema rõ cho login/register/reset-password.
+- Message lỗi phải thân thiện, ngắn gọn, có ngữ cảnh.
+- Không gửi field thừa ra API (đặc biệt khi backend đang bật strict validation).
 
 ## 11) Error handling & security
 
@@ -90,6 +101,7 @@
 - Chuẩn hóa toast/alert message theo nhóm lỗi (auth, validation, conflict, server).
 - Đảm bảo route protected không render nội dung nhạy cảm trước khi auth check hoàn tất.
 - Interceptor xử lý `401/403` phải tránh vòng lặp refresh token vô hạn.
+- Cookie/session key dùng constants, không hardcode tên cookie trong component.
 
 ## 12) Testing expectations
 
