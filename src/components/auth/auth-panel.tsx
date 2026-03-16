@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
-import { login, register } from "@/lib/api/auth.api";
+import { AuthSessionPayload, login, register } from "@/lib/api/auth.api";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Button } from "@/components/ui/button";
+import { setAccessToken } from "@/lib/auth/session-manager";
 
 const emailSchema = z.email("Email không hợp lệ");
 const passwordSchema = z.string().min(8, "Mật khẩu tối thiểu 8 ký tự");
@@ -48,6 +49,10 @@ function redirectPathByRole(role: AuthRole) {
     return ROUTE_CONSTANTS.DASHBOARD;
 }
 
+function setRoleCookie(role: AuthRole) {
+    document.cookie = `${APP_CONSTANTS.COOKIE_ROLE_KEY}=${role}; path=/; max-age=${APP_CONSTANTS.COOKIE_MAX_AGE_SECONDS}`;
+}
+
 export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
     const router = useRouter();
     const { setSession } = useAuthUiStore();
@@ -77,11 +82,20 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
     });
 
     const loginMutation = useMutation({
-        mutationFn: login,
-        onSuccess: (_, variables) => {
-            document.cookie = `${APP_CONSTANTS.COOKIE_ROLE_KEY}=${selectedRole}; path=/; max-age=${APP_CONSTANTS.COOKIE_MAX_AGE_SECONDS}`;
-            setSession({ role: selectedRole, email: variables.email });
-            router.push(redirectPathByRole(selectedRole));
+        mutationFn: (payload: LoginFormValues) => login(payload, selectedRole),
+        onSuccess: (session: AuthSessionPayload, variables) => {
+            const role = session.user?.role ?? selectedRole;
+            const email = session.user?.email ?? variables.email;
+
+            setRoleCookie(role);
+            setAccessToken(session.accessToken);
+            setSession({
+                role,
+                email,
+                fullName: session.user?.fullName,
+            });
+
+            router.push(redirectPathByRole(role));
         },
         onError: (error: { message?: string }) => {
             setApiMessage(error?.message ?? "Đăng nhập thất bại. Vui lòng thử lại.");
@@ -90,7 +104,8 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
 
     const registerMutation = useMutation({
         mutationFn: register,
-        onSuccess: () => {
+        onSuccess: (session) => {
+            setAccessToken(session.accessToken);
             setApiMessage("Đăng ký thành công. Mời bạn đăng nhập để tiếp tục.");
             router.push(APP_CONSTANTS.LOGIN_PATH);
         },
