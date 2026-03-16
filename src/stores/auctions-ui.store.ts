@@ -9,10 +9,13 @@ type AuctionsUiState = {
     pageSize: number;
     search: string;
     status: AuctionFilterStatus;
+    // Sprint 4: live bid price updated via WebSocket
+    currentBidPrice: number | null;
     setPage: (page: number) => void;
     setPageSize: (pageSize: number) => void;
     setSearch: (search: string) => void;
     setStatus: (status: AuctionFilterStatus) => void;
+    setCurrentBidPrice: (price: number) => void;
     resetFilters: () => void;
 };
 
@@ -24,6 +27,7 @@ export const useAuctionsUiStore = create<AuctionsUiState>((set) => ({
     pageSize: DEFAULT_PAGE_SIZE,
     search: "",
     status: "ACTIVE",
+    currentBidPrice: null,
     setPage: (page) => set({ page: Math.max(APP_CONSTANTS.PAGINATION_MIN_PAGE, page) }),
     setPageSize: (pageSize) =>
         set({
@@ -35,11 +39,13 @@ export const useAuctionsUiStore = create<AuctionsUiState>((set) => ({
         }),
     setSearch: (search) => set({ search, page: DEFAULT_PAGE }),
     setStatus: (status) => set({ status, page: DEFAULT_PAGE }),
+    setCurrentBidPrice: (price) => set({ currentBidPrice: price }),
     resetFilters: () =>
         set({
             page: DEFAULT_PAGE,
             pageSize: DEFAULT_PAGE_SIZE,
             search: "",
             status: "ACTIVE",
+            currentBidPrice: null,
         }),
 }));

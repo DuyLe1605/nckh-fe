@@ -8,6 +8,8 @@ import { getAuctionDetail } from "@/lib/api/auctions.api";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LiveBidPanel } from "@/components/auction/LiveBidPanel";
 import { ROUTE_CONSTANTS } from "@/constants/app.constants";
 
 type AuctionDetailPageProps = {
@@ -31,6 +33,7 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
     const auctionsDetailQuery = useQuery({
         queryKey: QUERY_KEYS.auctions.detail(id),
         queryFn: () => getAuctionDetail(id),
+        staleTime: 60_000,
     });
 
     const auction = auctionsDetailQuery.data?.product;
@@ -45,46 +48,81 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
             </Link>
 
             {auctionsDetailQuery.isLoading ? (
-                <p className="text-sm text-muted-foreground">Đang tải chi tiết auction...</p>
+                /* ─── Skeleton layout ─ */
+                <div className="flex flex-col gap-6">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between gap-3">
+                                <Skeleton className="h-7 w-2/3" />
+                                <Skeleton className="h-5 w-16 rounded-full" />
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                            <div className="grid gap-2 md:grid-cols-2">
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <Skeleton key={i} className="h-5 w-full" />
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Skeleton className="h-48 w-full rounded-xl" />
+                </div>
             ) : auctionsDetailQuery.isError || !auction ? (
                 <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                     Không thể tải chi tiết auction.
                 </p>
             ) : (
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <CardTitle className="text-2xl">{auction.title}</CardTitle>
-                            <Badge variant="outline">{auction.status}</Badge>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4 text-sm">
-                        <p>{auction.description}</p>
-                        <div className="grid gap-2 md:grid-cols-2">
-                            <p>
-                                Giá khởi điểm:{" "}
-                                <span className="font-semibold">{formatCurrency(auction.startPrice)}</span>
-                            </p>
-                            <p>
-                                Giá hiện tại:{" "}
-                                <span className="font-semibold">{formatCurrency(auction.currentPrice)}</span>
-                            </p>
-                            <p>
-                                Bước giá: <span className="font-semibold">{formatCurrency(auction.bidIncrement)}</span>
-                            </p>
-                            <p>Kết thúc: {new Date(auction.endTime).toLocaleString("vi-VN")}</p>
-                        </div>
+                <div className="flex flex-col gap-6">
+                    {/* ─── Product Info Card ─ */}
+                    <Card>
+                        <CardHeader>
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <CardTitle className="text-2xl">{auction.title}</CardTitle>
+                                <Badge variant="outline">{auction.status}</Badge>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4 text-sm">
+                            <p>{auction.description}</p>
+                            <div className="grid gap-2 md:grid-cols-2">
+                                <p>
+                                    Giá khởi điểm:{" "}
+                                    <span className="font-semibold">{formatCurrency(auction.startPrice)}</span>
+                                </p>
+                                <p>
+                                    Giá hiện tại:{" "}
+                                    <span className="font-semibold">{formatCurrency(auction.currentPrice)}</span>
+                                </p>
+                                <p>
+                                    Bước giá:{" "}
+                                    <span className="font-semibold">{formatCurrency(auction.bidIncrement)}</span>
+                                </p>
+                                <p>Kết thúc: {new Date(auction.endTime).toLocaleString("vi-VN")}</p>
+                            </div>
 
-                        <div className="grid gap-2 rounded-lg border border-border/70 p-3 md:grid-cols-2">
-                            <p>
-                                Seller: <span className="font-medium">{auction.seller?.fullName ?? "N/A"}</span>
-                            </p>
-                            <p>
-                                Category: <span className="font-medium">{auction.category?.name ?? "N/A"}</span>
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
+                            <div className="grid gap-2 rounded-lg border border-border/70 p-3 md:grid-cols-2">
+                                <p>
+                                    Seller:{" "}
+                                    <span className="font-medium">{auction.seller?.fullName ?? "N/A"}</span>
+                                </p>
+                                <p>
+                                    Category:{" "}
+                                    <span className="font-medium">{auction.category?.name ?? "N/A"}</span>
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* ─── Live Bid Panel (Sprint 4) ─ */}
+                    <LiveBidPanel
+                        productId={id}
+                        initialPrice={Number(auction.currentPrice)}
+                        bidIncrement={Number(auction.bidIncrement)}
+                        status={auction.status}
+                        effectiveEndTime={auction.endTime}
+                    />
+                </div>
             )}
         </main>
     );
