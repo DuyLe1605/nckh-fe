@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
-import { AuthSessionPayload, login, register } from "@/lib/api/auth.api";
+import { toast } from "sonner";
+import { AuthRole, AuthSessionPayload, login, register } from "@/lib/api/auth.api";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Button } from "@/components/ui/button";
 import { setAccessToken } from "@/lib/auth/session-manager";
+import { setRoleCookie } from "@/lib/auth/role-cookie";
 
 const emailSchema = z.email("Email không hợp lệ");
 const passwordSchema = z.string().min(8, "Mật khẩu tối thiểu 8 ký tự");
@@ -35,13 +37,6 @@ const registerSchema = z
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 type AuthPanelMode = "login" | "register";
-type AuthRole = "BIDDER" | "SELLER" | "ADMIN";
-
-const ROLE_OPTIONS: Array<{ value: AuthRole; label: string }> = [
-    { value: APP_CONSTANTS.ROLE_BIDDER, label: "Bidder" },
-    { value: APP_CONSTANTS.ROLE_SELLER, label: "Seller" },
-    { value: APP_CONSTANTS.ROLE_ADMIN, label: "Admin" },
-];
 
 function redirectPathByRole(role: AuthRole) {
     if (role === APP_CONSTANTS.ROLE_ADMIN) return ROUTE_CONSTANTS.USERS;
@@ -49,21 +44,16 @@ function redirectPathByRole(role: AuthRole) {
     return ROUTE_CONSTANTS.DASHBOARD;
 }
 
-function setRoleCookie(role: AuthRole) {
-    document.cookie = `${APP_CONSTANTS.COOKIE_ROLE_KEY}=${role}; path=/; max-age=${APP_CONSTANTS.COOKIE_MAX_AGE_SECONDS}`;
-}
-
 export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
     const router = useRouter();
     const { setSession } = useAuthUiStore();
-    const [selectedRole, setSelectedRole] = useState<AuthRole>(APP_CONSTANTS.ROLE_BIDDER);
     const [apiMessage, setApiMessage] = useState<string | null>(null);
 
     const isLoginMode = mode === "login";
     const title = isLoginMode ? "Chào mừng trở lại" : "Tạo tài khoản mới";
     const subtitle = isLoginMode
-        ? "Đăng nhập để tham gia đấu giá realtime, theo dõi ví và đơn hàng."
-        : "Khởi tạo tài khoản để bắt đầu hành trình seller hoặc bidder.";
+        ? "Đăng nhập bằng email và mật khẩu, quyền truy cập sẽ do backend tự nhận diện."
+        : "Tạo tài khoản người dùng để bắt đầu tham gia đấu giá.";
 
     const loginForm = useForm<LoginFormValues>({
         defaultValues: {
@@ -82,10 +72,18 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
     });
 
     const loginMutation = useMutation({
-        mutationFn: (payload: LoginFormValues) => login(payload, selectedRole),
+        mutationFn: (payload: LoginFormValues) => login(payload),
         onSuccess: (session: AuthSessionPayload, variables) => {
-            const role = session.user?.role ?? selectedRole;
+            const role = session.user?.role;
             const email = session.user?.email ?? variables.email;
+
+            if (!role) {
+                setApiMessage("Không xác định được role từ backend. Vui lòng thử lại.");
+                toast.error("Đăng nhập thất bại", {
+                    description: "Backend chưa trả role người dùng.",
+                });
+                return;
+            }
 
             setRoleCookie(role);
             setAccessToken(session.accessToken);
@@ -95,22 +93,34 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                 fullName: session.user?.fullName,
             });
 
+            toast.success("Đăng nhập thành công", {
+                description: `Xin chào ${session.user?.fullName ?? email}`,
+            });
+
             router.push(redirectPathByRole(role));
         },
         onError: (error: { message?: string }) => {
             setApiMessage(error?.message ?? "Đăng nhập thất bại. Vui lòng thử lại.");
+            toast.error("Đăng nhập thất bại", {
+                description: error?.message ?? "Vui lòng thử lại.",
+            });
         },
     });
 
     const registerMutation = useMutation({
         mutationFn: register,
-        onSuccess: (session) => {
-            setAccessToken(session.accessToken);
+        onSuccess: () => {
             setApiMessage("Đăng ký thành công. Mời bạn đăng nhập để tiếp tục.");
+            toast.success("Đăng ký thành công", {
+                description: "Bạn có thể đăng nhập ngay bây giờ.",
+            });
             router.push(APP_CONSTANTS.LOGIN_PATH);
         },
         onError: (error: { message?: string }) => {
             setApiMessage(error?.message ?? "Đăng ký thất bại. Vui lòng thử lại.");
+            toast.error("Đăng ký thất bại", {
+                description: error?.message ?? "Vui lòng thử lại.",
+            });
         },
     });
 
@@ -149,23 +159,6 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                 <div className="mb-6">
                     <h2 className="text-2xl font-semibold">{title}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-                </div>
-
-                <div className="mb-5 grid grid-cols-3 gap-2 rounded-xl bg-muted/60 p-1">
-                    {ROLE_OPTIONS.map((role) => (
-                        <button
-                            key={role.value}
-                            type="button"
-                            onClick={() => setSelectedRole(role.value)}
-                            className={`rounded-lg px-2 py-2 text-xs font-medium transition ${
-                                selectedRole === role.value
-                                    ? "bg-primary text-primary-foreground shadow"
-                                    : "text-muted-foreground hover:bg-background"
-                            }`}
-                        >
-                            {role.label}
-                        </button>
-                    ))}
                 </div>
 
                 {isLoginMode ? (

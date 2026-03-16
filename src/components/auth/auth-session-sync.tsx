@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { refreshSession } from "@/lib/api/auth.api";
 import { setAccessToken, subscribeAuthEvents } from "@/lib/auth/session-manager";
+import { clearRoleCookie, setRoleCookie } from "@/lib/auth/role-cookie";
 
 export function AuthSessionSync() {
     const { clearSession, setSession } = useAuthUiStore();
@@ -19,6 +20,7 @@ export function AuthSessionSync() {
                 }
 
                 if (payload.user?.email && payload.user.role) {
+                    setRoleCookie(payload.user.role);
                     setSession({
                         role: payload.user.role,
                         email: payload.user.email,
@@ -32,6 +34,7 @@ export function AuthSessionSync() {
 
         const unsubscribe = subscribeAuthEvents((event) => {
             if (event.type === "LOGOUT") {
+                clearRoleCookie();
                 clearSession();
             }
         });

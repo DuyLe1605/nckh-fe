@@ -53,7 +53,7 @@ function normalizeAuthResponse<TPayload>(
     };
 }
 
-export async function login(payload: LoginPayload, fallbackRole?: AuthRole) {
+export async function login(payload: LoginPayload) {
     const deviceId = getDeviceId();
     const response = await apiClient.post<AuthApiSkeletonResponse<LoginPayload>>(APP_CONSTANTS.AUTH_LOGIN_ENDPOINT, {
         ...payload,
@@ -61,7 +61,6 @@ export async function login(payload: LoginPayload, fallbackRole?: AuthRole) {
     });
     return normalizeAuthResponse(response.data, {
         email: payload.email,
-        role: fallbackRole,
     });
 }
 
