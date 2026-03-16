@@ -3,7 +3,7 @@ export const QUERY_KEYS = {
         profile: ["auth", "profile"] as const,
     },
     auctions: {
-        list: ["auctions", "list"] as const,
+        list: (params?: Record<string, string | number | undefined>) => ["auctions", "list", params] as const,
         detail: (id: string) => ["auctions", "detail", id] as const,
     },
 } as const;

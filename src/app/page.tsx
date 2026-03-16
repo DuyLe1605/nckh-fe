@@ -29,10 +29,10 @@ export default function HomePage() {
                         Tạo tài khoản
                     </Link>
                     <Link
-                        href={`${ROUTE_CONSTANTS.AUCTIONS_PREFIX}/demo-auction`}
+                        href={ROUTE_CONSTANTS.AUCTIONS_PREFIX}
                         className="inline-flex h-10 items-center justify-center rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-5 text-sm font-medium text-indigo-600 transition hover:bg-indigo-500/20 dark:text-indigo-300"
                     >
-                        Xem demo auction
+                        Xem danh sách auction
                     </Link>
                 </div>
             </section>
