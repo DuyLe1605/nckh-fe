@@ -34,11 +34,12 @@
 
 - [~] Form login/register
 - [~] Luồng token/cookie handling an toàn
-- [ ] Middleware role guard hoàn chỉnh
-- [ ] Client-side fallback guard + redirect UX
-- [ ] Trang profile/session state cơ bản
-- [~] Auth API integration bằng Axios + TanStack Query mutations
+- [x] Middleware role guard hoàn chỉnh
+- [x] Client-side fallback guard + redirect UX
+- [x] Trang profile/session state cơ bản
+- [x] Auth API integration bằng Axios + TanStack Query mutations
 - [~] Auth/session UI state bằng Zustand (không lưu dữ liệu nhạy cảm)
+- [x] Logout all devices flow (gọi `POST /auth/logout-all`)
 
 ## Sprint 3 — Public Auction Browsing
 
@@ -94,13 +95,13 @@
 
 ### In Progress
 
-- [~] Hoàn thiện Sprint 2 auth flow (cookie strategy, role redirects, session profile page)
+- [~] Hoàn thiện Sprint 2 auth flow (token contract ổn định khi BE thay đổi payload)
 - [~] Chuẩn hóa rule middleware static matcher và route-group conventions (file `FE/documents/instructions.md`)
 
 ### Next up
 
-- [ ] Chốt API contract auth với BE (token/refresh/role payload)
-- [ ] Bổ sung profile/session page và logout flow
+- [ ] Bổ sung error UX chi tiết cho refresh expired vs revoked
+- [ ] Bổ sung test cho logout-all và multi-tab sync
 
 ### Done
 

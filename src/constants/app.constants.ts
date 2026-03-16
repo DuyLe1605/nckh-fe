@@ -12,6 +12,7 @@ export const APP_CONSTANTS = {
     AUTH_REGISTER_ENDPOINT: "/auth/register",
     AUTH_REFRESH_ENDPOINT: "/auth/refresh",
     AUTH_LOGOUT_ENDPOINT: "/auth/logout",
+    AUTH_LOGOUT_ALL_ENDPOINT: "/auth/logout-all",
     AUTH_ME_ENDPOINT: "/auth/me",
     AUTH_BROADCAST_CHANNEL: "nckh-auth",
     TOKEN_REFRESH_GRACE_MS: 30_000,

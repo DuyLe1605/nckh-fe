@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/axios-client";
 import { APP_CONSTANTS } from "@/constants/app.constants";
+import { getDeviceId } from "@/lib/auth/device-id";
 
 export type AuthRole = "BIDDER" | "SELLER" | "ADMIN";
 
@@ -12,6 +13,7 @@ export type AuthUser = {
 export type AuthSessionPayload = {
     message: string;
     accessToken: string | null;
+    refreshTokenExpiresAt: string | null;
     user: AuthUser | null;
 };
 
@@ -30,6 +32,7 @@ type AuthApiSkeletonResponse<TPayload> = {
     message: string;
     body: TPayload;
     accessToken?: string;
+    refreshTokenExpiresAt?: string;
     user?: AuthUser;
 };
 
@@ -45,15 +48,17 @@ function normalizeAuthResponse<TPayload>(
     return {
         message: response.message,
         accessToken: response.accessToken ?? null,
+        refreshTokenExpiresAt: response.refreshTokenExpiresAt ?? null,
         user: response.user ?? fallbackUser,
     };
 }
 
 export async function login(payload: LoginPayload, fallbackRole?: AuthRole) {
-    const response = await apiClient.post<AuthApiSkeletonResponse<LoginPayload>>(
-        APP_CONSTANTS.AUTH_LOGIN_ENDPOINT,
-        payload,
-    );
+    const deviceId = getDeviceId();
+    const response = await apiClient.post<AuthApiSkeletonResponse<LoginPayload>>(APP_CONSTANTS.AUTH_LOGIN_ENDPOINT, {
+        ...payload,
+        deviceId,
+    });
     return normalizeAuthResponse(response.data, {
         email: payload.email,
         role: fallbackRole,
@@ -71,7 +76,10 @@ export async function register(payload: RegisterPayload) {
 }
 
 export async function refreshSession() {
-    const response = await apiClient.post<AuthApiSkeletonResponse<null>>(APP_CONSTANTS.AUTH_REFRESH_ENDPOINT);
+    const deviceId = getDeviceId();
+    const response = await apiClient.post<AuthApiSkeletonResponse<null>>(APP_CONSTANTS.AUTH_REFRESH_ENDPOINT, {
+        deviceId,
+    });
     return normalizeAuthResponse(response.data);
 }
 
@@ -88,5 +96,12 @@ export async function logout() {
     const response = await apiClient.post<{ message?: string }>(APP_CONSTANTS.AUTH_LOGOUT_ENDPOINT);
     return {
         message: response.data.message ?? "Logged out",
+    };
+}
+
+export async function logoutAllDevices() {
+    const response = await apiClient.post<{ message?: string }>(APP_CONSTANTS.AUTH_LOGOUT_ALL_ENDPOINT);
+    return {
+        message: response.data.message ?? "Logged out from all devices",
     };
 }

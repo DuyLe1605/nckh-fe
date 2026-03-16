@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { me } from "@/lib/api/auth.api";
+import { useRouter } from "next/navigation";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { logoutAllDevices, me } from "@/lib/api/auth.api";
+import { Button } from "@/components/ui/button";
+import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
+import { clearAccessToken } from "@/lib/auth/session-manager";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 
 export default function ProfilePage() {
-    const { currentEmail, currentRole, currentFullName, isAuthenticated, setSession } = useAuthUiStore();
+    const router = useRouter();
+    const { currentEmail, currentRole, currentFullName, isAuthenticated, setSession, clearSession } = useAuthUiStore();
 
     const profileQuery = useQuery({
         queryKey: QUERY_KEYS.auth.profile,
@@ -25,6 +30,16 @@ export default function ProfilePage() {
             fullName: user.fullName,
         });
     }, [profileQuery.data?.user, setSession]);
+
+    const logoutAllMutation = useMutation({
+        mutationFn: logoutAllDevices,
+        onSettled: () => {
+            document.cookie = `${APP_CONSTANTS.COOKIE_ROLE_KEY}=; path=/; max-age=0`;
+            clearAccessToken();
+            clearSession();
+            router.push(ROUTE_CONSTANTS.LOGIN);
+        },
+    });
 
     const email = profileQuery.data?.user?.email ?? currentEmail;
     const role = profileQuery.data?.user?.role ?? currentRole;
@@ -62,6 +77,17 @@ export default function ProfilePage() {
                         </dd>
                     </div>
                 </dl>
+
+                <div className="mt-5 flex justify-end">
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => logoutAllMutation.mutate()}
+                        disabled={logoutAllMutation.isPending}
+                    >
+                        {logoutAllMutation.isPending ? "Đang đăng xuất toàn bộ..." : "Đăng xuất tất cả thiết bị"}
+                    </Button>
+                </div>
             </div>
         </section>
     );
