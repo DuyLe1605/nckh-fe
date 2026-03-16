@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CurrentRoleBadge } from "@/components/auth/current-role-badge";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
@@ -27,6 +28,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
                         </nav>
                     </div>
                     <div className="flex items-center gap-2">
+                        <CurrentRoleBadge />
                         <ThemeToggle />
                         <LogoutButton />
                     </div>

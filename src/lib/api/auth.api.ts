@@ -3,6 +3,7 @@ import { APP_CONSTANTS } from "@/constants/app.constants";
 import { getDeviceId } from "@/lib/auth/device-id";
 
 export type AuthRole = "BIDDER" | "SELLER" | "ADMIN";
+export type RegisterRole = Exclude<AuthRole, "ADMIN">;
 
 export type AuthUser = {
     email: string;
@@ -26,6 +27,7 @@ export type RegisterPayload = {
     email: string;
     password: string;
     fullName: string;
+    role: RegisterRole;
 };
 
 type AuthApiSkeletonResponse<TPayload> = {

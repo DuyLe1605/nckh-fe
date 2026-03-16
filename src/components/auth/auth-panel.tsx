@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod/v4";
 import { toast } from "sonner";
-import { AuthRole, AuthSessionPayload, login, register } from "@/lib/api/auth.api";
+import { AuthRole, AuthSessionPayload, RegisterRole, login, register } from "@/lib/api/auth.api";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ const registerSchema = z
         email: emailSchema,
         password: passwordSchema,
         confirmPassword: z.string().min(8, "Vui lòng xác nhận mật khẩu"),
+        role: z.enum([APP_CONSTANTS.ROLE_BIDDER, APP_CONSTANTS.ROLE_SELLER]),
     })
     .refine((data) => data.password === data.confirmPassword, {
         path: ["confirmPassword"],
@@ -37,6 +38,19 @@ const registerSchema = z
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 type AuthPanelMode = "login" | "register";
+
+const REGISTER_ROLE_OPTIONS: Array<{ value: RegisterRole; label: string; hint: string }> = [
+    {
+        value: APP_CONSTANTS.ROLE_BIDDER,
+        label: "Bidder",
+        hint: "Tham gia đấu giá, theo dõi watchlist và trạng thái outbid.",
+    },
+    {
+        value: APP_CONSTANTS.ROLE_SELLER,
+        label: "Seller",
+        hint: "Đăng sản phẩm, theo dõi đơn hàng và quản lý phiên đấu giá.",
+    },
+];
 
 function redirectPathByRole(role: AuthRole) {
     if (role === APP_CONSTANTS.ROLE_ADMIN) return ROUTE_CONSTANTS.USERS;
@@ -68,7 +82,12 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
             email: "",
             password: "",
             confirmPassword: "",
+            role: APP_CONSTANTS.ROLE_BIDDER,
         },
+    });
+    const selectedRegisterRole = useWatch({
+        control: registerForm.control,
+        name: "role",
     });
 
     const loginMutation = useMutation({
@@ -141,9 +160,7 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                 <p className="inline-flex rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-500">
                     Sprint 2 • Authentication UX
                 </p>
-                <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-                    Giao diện đấu giá hiện đại, phản hồi nhanh và tối ưu dark mode.
-                </h1>
+                <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Ứng dụng đấu giá trực tuyến</h1>
                 <p className="max-w-xl text-muted-foreground">{subtitle}</p>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                     {featureItems.map((item) => (
@@ -248,6 +265,7 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                                 fullName: parsed.data.fullName,
                                 email: parsed.data.email,
                                 password: parsed.data.password,
+                                role: parsed.data.role,
                             });
                         })}
                     >
@@ -322,6 +340,34 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                                     </p>
                                 ) : null}
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Vai trò</label>
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                {REGISTER_ROLE_OPTIONS.map((option) => {
+                                    const isSelected = selectedRegisterRole === option.value;
+
+                                    return (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => registerForm.setValue("role", option.value)}
+                                            className={`rounded-lg border px-3 py-3 text-left transition ${
+                                                isSelected
+                                                    ? "border-primary bg-primary/10"
+                                                    : "border-border hover:border-primary/40"
+                                            }`}
+                                        >
+                                            <p className="text-sm font-medium">{option.label}</p>
+                                            <p className="mt-1 text-xs text-muted-foreground">{option.hint}</p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {registerForm.formState.errors.role ? (
+                                <p className="text-xs text-destructive">{registerForm.formState.errors.role.message}</p>
+                            ) : null}
                         </div>
 
                         {apiMessage ? <p className="text-sm text-destructive">{apiMessage}</p> : null}

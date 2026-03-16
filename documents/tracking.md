@@ -60,10 +60,10 @@
 
 ## Sprint 5 — Bidder/Seller Workflows
 
-- [ ] Bidder dashboard (winning/outbid/watchlist)
-- [ ] Seller create/edit product forms
-- [ ] Countdown theo `effective_end_time`
-- [ ] Hiển thị anti-sniping extension
+- [x] Bidder dashboard (winning/outbid/watchlist)
+- [x] Seller create/edit product forms
+- [x] Countdown theo `effective_end_time`
+- [x] Hiển thị anti-sniping extension
 
 ## Sprint 6 — Admin Console
 
@@ -97,14 +97,23 @@
 
 - [~] Hoàn thiện Sprint 2 auth flow (token contract ổn định khi BE thay đổi payload)
 - [~] Chuẩn hóa rule middleware static matcher và route-group conventions (file `FE/documents/instructions.md`)
+- [~] Kết nối API thật cho Sprint 5 seller create/update sau khi BE chốt payload cuối
+- [~] Harden refresh flow đa tab để tránh false logout khi rotation race
 
 ### Next up
 
 - [ ] Bổ sung error UX chi tiết cho refresh expired vs revoked
 - [ ] Bổ sung test cho logout-all và multi-tab sync
+- [ ] Hook bidder dashboard/watchlist với dữ liệu realtime từ API + socket events
+- [ ] Bổ sung optimistic UX cho seller create/edit product form
+- [ ] Chuyển bidder/seller dashboard từ mock data sang API thật + query invalidation
 
 ### Done
 
 - [x] Hoàn thành frontend scaffolding Sprint 1
 - [x] Cấu hình thành công Tailwind + shadcn/ui + pnpm
 - [x] Khởi động Sprint 2 với modern auth UI + dark mode + data layer foundation
+- [x] Sửa contract auth: register chọn role `BIDDER/SELLER`, login lấy role từ backend response
+- [x] Triển khai Sprint 5 UI workflows + dữ liệu mẫu đa dạng cho bidder/seller
+- [x] Header protected hiển thị role động bằng role badge
+- [x] Custom status badge cho role/order/auction state surfaces

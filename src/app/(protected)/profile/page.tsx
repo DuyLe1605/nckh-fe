@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { logoutAllDevices, me } from "@/lib/api/auth.api";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
 import { clearAccessToken } from "@/lib/auth/session-manager";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
@@ -64,7 +65,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                         <dt className="text-muted-foreground">Role</dt>
-                        <dd className="font-medium">{role ?? "(chưa có)"}</dd>
+                        <dd className="font-medium">{role ? <StatusBadge status={role} /> : "(chưa có)"}</dd>
                     </div>
                     <div>
                         <dt className="text-muted-foreground">Profile API</dt>

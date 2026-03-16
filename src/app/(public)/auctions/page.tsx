@@ -10,7 +10,7 @@ import { useAuctionsUiStore, type AuctionFilterStatus } from "@/stores/auctions-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { ROUTE_CONSTANTS } from "@/constants/app.constants";
 
 const statusOptions: Array<{ value: AuctionFilterStatus; label: string }> = [
@@ -117,7 +117,7 @@ export default function AuctionsListPage() {
                             <CardHeader>
                                 <div className="flex items-start justify-between gap-2">
                                     <CardTitle className="line-clamp-2">{auction.title}</CardTitle>
-                                    <Badge variant="outline">{auction.status}</Badge>
+                                    <StatusBadge status={auction.status} />
                                 </div>
                                 <CardDescription className="line-clamp-2">{auction.description}</CardDescription>
                             </CardHeader>

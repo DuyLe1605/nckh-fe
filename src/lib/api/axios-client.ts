@@ -1,6 +1,7 @@
 import axios from "axios";
 import { APP_CONSTANTS } from "@/constants/app.constants";
-import { clearAccessToken, getAccessToken, getAccessTokenWithMutex, setAccessToken } from "@/lib/auth/session-manager";
+import { getDeviceId } from "@/lib/auth/device-id";
+import { getAccessToken, getAccessTokenWithMutex, setAccessToken } from "@/lib/auth/session-manager";
 
 function getBaseUrl() {
     return process.env.NEXT_PUBLIC_API_BASE_URL ?? `${APP_CONSTANTS.DEFAULT_BE_ORIGIN}${APP_CONSTANTS.API_PREFIX}`;
@@ -23,9 +24,10 @@ const authExcludedEndpoints = [
 
 async function requestTokenRefresh() {
     try {
+        const deviceId = getDeviceId();
         const response = await axios.post<{ accessToken?: string }>(
             `${getBaseUrl()}${APP_CONSTANTS.AUTH_REFRESH_ENDPOINT}`,
-            {},
+            { deviceId },
             {
                 timeout: APP_CONSTANTS.API_TIMEOUT_MS,
                 withCredentials: true,
@@ -36,7 +38,6 @@ async function requestTokenRefresh() {
         setAccessToken(nextAccessToken);
         return nextAccessToken;
     } catch {
-        clearAccessToken();
         return null;
     }
 }
@@ -54,7 +55,8 @@ apiClient.interceptors.response.use(
     (response) => response,
     async (error) => {
         const status = error?.response?.status;
-        const message = error?.response?.data?.message;
+        const rawMessage = error?.response?.data?.message;
+        const message = Array.isArray(rawMessage) ? rawMessage.join("; ") : rawMessage;
         const originalConfig = error?.config as (typeof error.config & { _retry?: boolean }) | undefined;
         const requestUrl: string = originalConfig?.url ?? "";
 
