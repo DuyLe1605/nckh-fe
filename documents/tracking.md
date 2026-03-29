@@ -41,6 +41,8 @@
 | A-012   | Luồng quên mật khẩu 2 bước (email -> OTP reset)     | ✅ Done | —        | Trang `/forgot-password` redesign + UX cải thiện |
 | A-013   | Profile page redesign chuẩn production              | ✅ Done | —        | Hero card + security cards + CTA xác thực        |
 | A-014   | Chuẩn hóa auth query/mutation vào `lib/query/hooks` | ✅ Done | —        | Loại bỏ mutation inline ở auth components/pages  |
+| A-015   | Track attribution từ email link (`from=email` + UTM) | ✅ Done | —        | Parse query params + log event funnel auth       |
+| A-016   | Verify/Reset funnel tracking (click -> success)     | ✅ Done | —        | Dedupe theo session, không bắn trùng event       |
 
 ## Epic 3 — Public Auction Browsing
 
@@ -95,6 +97,7 @@
 | AC-003  | Admin analytics dashboard      | ✅ Done | —        | Charts + stats                                     |
 | AC-004  | Category management UI         | ✅ Done | —        | Tree CRUD                                          |
 | AC-005  | Admin layout + sidebar         | ✅ Done | —        | Navigation + active state                          |
+| AC-006  | Auth funnel analytics widget   | [ ] Todo | P1     | Hiển thị click/verify/reset theo source/campaign   |
 
 ## Epic 8 — Quality & Performance
 
@@ -116,9 +119,15 @@
 
 ### 📋 Tiếp theo (Next up)
 
+- [ ] AC-006: Trang admin hiển thị auth funnel (click/verify/reset + conversion rate)
+- [ ] Đồng bộ data source từ persisted BE stats (DB/Redis) thay cho in-memory API
 - [ ] QP-001 (tiếp): Unit tests cho utils/hook còn lại (socket, query helpers, stores)
 
 ### ✅ Hoàn thành gần đây
+
+- [x] Auth Funnel Tracking v1: thêm `auth-funnel.ts` (mask email + dedupe + sendBeacon/fetch)
+- [x] Tích hợp tracking vào `/verify-account` và `/forgot-password` (email click + success)
+- [x] Thêm API route `/api/analytics/auth-funnel` để ingest sự kiện và trả stats/ratios
 
 - [x] QP-001 (partial): Setup Vitest + jsdom + test scripts; thêm 9 unit tests cho `use-auth` và `use-profile`
 

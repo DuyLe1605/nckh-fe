@@ -339,7 +339,11 @@ function ForgotPasswordContent() {
 
 export default function ForgotPasswordPage() {
     return (
-        <Suspense fallback={<div className="mx-auto w-full max-w-4xl px-6 py-10 text-sm text-muted-foreground">Đang tải...</div>}>
+        <Suspense
+            fallback={
+                <div className="mx-auto w-full max-w-4xl px-6 py-10 text-sm text-muted-foreground">Đang tải...</div>
+            }
+        >
             <ForgotPasswordContent />
         </Suspense>
     );

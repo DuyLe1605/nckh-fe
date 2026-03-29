@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useAdminDashboardQuery } from "@/lib/query/hooks/use-dashboard";
+import { useAdminAuthFunnelQuery, useAdminDashboardQuery } from "@/lib/query/hooks/use-dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,10 @@ function formatDate(iso: string) {
     }) + " " + date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatPercent(value: number) {
+    return `${(value * 100).toFixed(1)}%`;
+}
+
 const chartConfig = {
     revenue: {
         label: "Doanh thu (Phí nền tảng)",
@@ -46,9 +50,15 @@ const chartConfig = {
 
 export default function AdminDashboardPage() {
     const { data: response, isLoading, isError } = useAdminDashboardQuery();
+    const {
+        data: authFunnelResponse,
+        isLoading: isAuthFunnelLoading,
+        isError: isAuthFunnelError,
+    } = useAdminAuthFunnelQuery(30);
 
     const data = response?.data;
     const monthlyRevenue = data?.monthlyRevenue || [];
+    const authFunnelData = authFunnelResponse?.data;
 
     const [activeChart, setActiveChart] = useState<keyof typeof chartConfig>("revenue");
 
@@ -69,6 +79,12 @@ export default function AdminDashboardPage() {
             {isError && (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
                     Không thể tải dữ liệu thống kê. Vui lòng thử lại sau.
+                </div>
+            )}
+
+            {isAuthFunnelError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                    Không thể tải dữ liệu auth funnel. Vui lòng thử lại sau.
                 </div>
             )}
 
@@ -130,6 +146,122 @@ export default function AdminDashboardPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Verify Conversion (Email)</CardTitle>
+                        <CardDescription>Click link xác thực → verify thành công (30 ngày)</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {isAuthFunnelLoading ? (
+                            <Skeleton className="h-24 w-full" />
+                        ) : (
+                            <>
+                                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                                    {formatPercent(authFunnelData?.ratios.verifyRate ?? 0)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    {authFunnelData?.totals.verifySuccessFromEmail ?? 0} / {authFunnelData?.totals.verifyClicksFromEmail ?? 0} lượt
+                                </div>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Reset Conversion (Email)</CardTitle>
+                        <CardDescription>Click link đặt lại mật khẩu → reset thành công (30 ngày)</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {isAuthFunnelLoading ? (
+                            <Skeleton className="h-24 w-full" />
+                        ) : (
+                            <>
+                                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                    {formatPercent(authFunnelData?.ratios.resetRate ?? 0)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    {authFunnelData?.totals.resetSuccessFromEmail ?? 0} / {authFunnelData?.totals.resetClicksFromEmail ?? 0} lượt
+                                </div>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Overall Auth Funnel</CardTitle>
+                        <CardDescription>
+                            Tổng conversion verify + reset trong {authFunnelData?.range.days ?? 30} ngày
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {isAuthFunnelLoading ? (
+                            <Skeleton className="h-24 w-full" />
+                        ) : (
+                            <>
+                                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                                    {formatPercent(authFunnelData?.ratios.overallRate ?? 0)}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    Total clicks: {(authFunnelData?.totals.verifyClicksFromEmail ?? 0) + (authFunnelData?.totals.resetClicksFromEmail ?? 0)}
+                                </div>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Auth Funnel theo Campaign</CardTitle>
+                    <CardDescription>
+                        So sánh conversion theo `utm_campaign` (nguồn email)
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {isAuthFunnelLoading ? (
+                        <Skeleton className="h-44 w-full" />
+                    ) : authFunnelData?.campaigns?.length ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[680px] text-sm">
+                                <thead>
+                                    <tr className="border-b text-left text-muted-foreground">
+                                        <th className="px-2 py-2 font-medium">Campaign</th>
+                                        <th className="px-2 py-2 font-medium">Verify</th>
+                                        <th className="px-2 py-2 font-medium">Reset</th>
+                                        <th className="px-2 py-2 font-medium">Clicks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {authFunnelData.campaigns.map((campaign) => (
+                                        <tr key={campaign.utmCampaign} className="border-b last:border-0">
+                                            <td className="px-2 py-2 font-medium">{campaign.utmCampaign}</td>
+                                            <td className="px-2 py-2">
+                                                {campaign.verifySuccess}/{campaign.verifyClicks}
+                                                <span className="ml-2 text-xs text-muted-foreground">({formatPercent(campaign.verifyRate)})</span>
+                                            </td>
+                                            <td className="px-2 py-2">
+                                                {campaign.resetSuccess}/{campaign.resetClicks}
+                                                <span className="ml-2 text-xs text-muted-foreground">({formatPercent(campaign.resetRate)})</span>
+                                            </td>
+                                            <td className="px-2 py-2">
+                                                {campaign.verifyClicks + campaign.resetClicks}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="text-sm text-muted-foreground">
+                            Chưa có dữ liệu campaign trong khoảng thời gian đã chọn.
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* ─── Revenue Chart ─── */}

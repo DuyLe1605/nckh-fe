@@ -87,3 +87,47 @@ export async function getAdminDashboardAnalytics() {
     );
     return response.data;
 }
+
+export type AuthFunnelCampaignStats = {
+    utmCampaign: string;
+    verifyClicks: number;
+    verifySuccess: number;
+    resetClicks: number;
+    resetSuccess: number;
+    verifyRate: number;
+    resetRate: number;
+};
+
+export type AuthFunnelAnalyticsResponse = {
+    message: string;
+    data: {
+        range: {
+            days: number;
+            from: string;
+            to: string;
+        };
+        totals: {
+            verifyClicksFromEmail: number;
+            verifySuccessFromEmail: number;
+            resetClicksFromEmail: number;
+            resetSuccessFromEmail: number;
+        };
+        ratios: {
+            verifyRate: number;
+            resetRate: number;
+            overallRate: number;
+        };
+        campaigns: AuthFunnelCampaignStats[];
+    };
+};
+
+export async function getAdminAuthFunnelAnalytics(days = 30) {
+    const response = await apiClient.get<AuthFunnelAnalyticsResponse>(
+        "/admin/analytics/auth-funnel",
+        {
+            params: { days },
+        },
+    );
+
+    return response.data;
+}
