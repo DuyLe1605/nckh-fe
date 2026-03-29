@@ -47,7 +47,7 @@
 | PB-004 | ⚡ Fix: effectiveEndTime prop đúng | ✅ Done | — | effectiveEndTime ?? endTime |
 | PB-005 | Skeleton/loading/error states | ✅ Done | — | Skeleton UI exists |
 | PB-006 | Trang chủ (/) hero + featured auctions | 🔄 Basic | P2 | Cần redesign |
-
+| LP-001 | Animated Landing Page with framer-motion |  🔄 Basic | P2 | Cần redesign |
 ## Epic 4 — Live Bidding Experience
 
 | Task ID | Task | Status | Priority | Notes |
