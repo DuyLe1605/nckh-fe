@@ -47,7 +47,7 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
                 href={ROUTE_CONSTANTS.AUCTIONS_PREFIX}
                 className="text-sm text-muted-foreground hover:text-foreground"
             >
-                ← Quay lại danh sách auctions
+                ← Quay lại danh sách đấu giá
             </Link>
 
             {auctionsDetailQuery.isLoading ? (
@@ -114,11 +114,11 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
 
                             <div className="grid gap-2 rounded-lg border border-border/70 p-3 md:grid-cols-2">
                                 <p>
-                                    Seller:{" "}
+                                    Người bán:{" "}
                                     <span className="font-medium">{auction.seller?.fullName ?? "N/A"}</span>
                                 </p>
                                 <p>
-                                    Category:{" "}
+                                    Danh mục:{" "}
                                     <span className="font-medium">{auction.category?.name ?? "N/A"}</span>
                                 </p>
                             </div>

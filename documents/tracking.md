@@ -137,5 +137,5 @@
 - [x] Admin Layout Sidebar with nav + active state (Phase 5)
 - [x] Category dropdown trên seller product forms (Phase 5)
 - [x] Admin Categories CRUD Management (Phase 6)
-- [x] Admin Reports & Disputes Moderation (Phase 6) 
 - [x] Product Image Uploads Local Storage (Phase 6)
+- [x] Việt hóa toàn bộ giao diện (Localization)

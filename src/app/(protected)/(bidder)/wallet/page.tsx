@@ -91,9 +91,9 @@ export default function WalletPage() {
     return (
         <section className="space-y-6">
             <header>
-                <h1 className="text-2xl font-semibold">My Wallet</h1>
+                <h1 className="text-2xl font-semibold">Ví Của Tôi</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                    Quản lý số dư ví và lịch sử giao dịch escrow.
+                    Quản lý số dư tiền và lịch sử giao dịch (Escrow).
                 </p>
             </header>
 
@@ -157,7 +157,7 @@ export default function WalletPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="text-xs text-muted-foreground">
-                        Available + Held
+                        Khả dụng + Tạm giữ
                     </CardContent>
                 </Card>
             </div>
@@ -244,7 +244,7 @@ export default function WalletPage() {
                                                       : ""
                                             }
                                         >
-                                            {tx.status}
+                                            {tx.status === "COMPLETED" ? "THÀNH CÔNG" : tx.status === "FAILED" ? "THẤT BẠI" : tx.status}
                                         </Badge>
                                     </div>
                                 </li>

@@ -87,14 +87,14 @@ function UserStatusBadge({ status }: { status: string }) {
 type Notification = { type: "success" | "error"; text: string };
 
 const ROLE_FILTERS: { value: UserRole | ""; label: string }[] = [
-    { value: "", label: "Tất cả role" },
-    { value: "BIDDER", label: "Bidder" },
-    { value: "SELLER", label: "Seller" },
-    { value: "ADMIN", label: "Admin" },
+    { value: "", label: "Tất cả vai trò" },
+    { value: "BIDDER", label: "Người mua (Bidder)" },
+    { value: "SELLER", label: "Người bán (Seller)" },
+    { value: "ADMIN", label: "Quản trị viên (Admin)" },
 ];
 
 const STATUS_FILTERS: { value: UserStatus | ""; label: string }[] = [
-    { value: "", label: "Tất cả status" },
+    { value: "", label: "Tất cả trạng thái" },
     { value: "ACTIVE", label: "Hoạt động" },
     { value: "UNVERIFIED", label: "Chưa xác minh" },
     { value: "SUSPENDED", label: "Tạm dừng" },

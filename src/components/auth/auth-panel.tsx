@@ -148,9 +148,9 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
 
     const featureItems = useMemo(
         () => [
-            "Realtime bidding updates dưới 100ms",
-            "Role-based dashboard cho Bidder/Seller/Admin",
-            "Escrow wallet tracking minh bạch",
+            "Cập nhật kết quả đấu giá thời gian thực <100ms",
+            "Trang tổng quan phân quyền: Bidder/Seller/Admin",
+            "Theo dõi ví Escrow minh bạch và an toàn",
         ],
         [],
     );
@@ -159,7 +159,7 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
         <div className="mx-auto grid min-h-[calc(100vh-84px)] w-full max-w-6xl grid-cols-1 gap-10 px-6 py-10 lg:grid-cols-2 lg:items-center">
             <section className="space-y-5">
                 <p className="inline-flex rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-500">
-                    Sprint 2 • Authentication UX
+                    Nền tảng Đấu giá Trực tuyến • Xác thực & Bảo mật
                 </p>
                 <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Ứng dụng đấu giá trực tuyến</h1>
                 <p className="max-w-xl text-muted-foreground">{subtitle}</p>

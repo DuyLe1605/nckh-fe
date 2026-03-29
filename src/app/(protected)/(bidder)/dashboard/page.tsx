@@ -67,9 +67,9 @@ export default function BidderDashboardPage() {
     return (
         <section className="space-y-6">
             <header>
-                <h1 className="text-2xl font-semibold">Bidder Dashboard</h1>
+                <h1 className="text-2xl font-semibold">Trang tổng quan (Dashboard)</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                    Theo dõi trạng thái winning / outbid theo thời gian thực với countdown{" "}
+                    Theo dõi trạng thái thẻ giá dẫn đầu / bị vượt (outbid) theo thời gian thực với đếm ngược{" "}
                     <code className="mx-1 rounded bg-muted px-1 py-0.5 text-xs">effectiveEndTime</code>.
                 </p>
             </header>
@@ -147,7 +147,7 @@ export default function BidderDashboardPage() {
                         <p className="text-sm text-muted-foreground">
                             Bạn chưa tham gia phiên đấu giá nào đang hoạt động.{" "}
                             <Link href="/auctions" className="underline underline-offset-2 hover:text-foreground">
-                                Khám phá auctions
+                                Khám phá các phiên đấu giá
                             </Link>
                         </p>
                     ) : (
@@ -182,7 +182,7 @@ export default function BidderDashboardPage() {
                                             </span>
                                         </p>
                                         <p>
-                                            Countdown:{" "}
+                                            Đếm ngược:{" "}
                                             <span className="font-medium text-foreground">
                                                 {formatCountdown(bid.product?.effectiveEndTime ?? "", nowMs)}
                                             </span>
@@ -193,7 +193,7 @@ export default function BidderDashboardPage() {
                                     </div>
                                     {bid.status === "OUTBID" && gap > 0 && (
                                         <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-                                            Bạn đang bị outbid {formatCurrency(gap)}. Cân nhắc rebid trước khi hết giờ.
+                                            Bạn đang bị vượt giá {formatCurrency(gap)}. Cân nhắc trả giá lại trước khi hết giờ.
                                         </p>
                                     )}
                                 </Link>
@@ -209,7 +209,7 @@ export default function BidderDashboardPage() {
                     <CardHeader>
                         <CardTitle>Đã chiến thắng 🎉</CardTitle>
                         <CardDescription>
-                            Các phiên bạn đã thắng — kiểm tra đơn hàng trong mục Orders.
+                            Các phiên bạn đã thắng — kiểm tra đơn hàng trong mục Đơn hàng của tôi.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">

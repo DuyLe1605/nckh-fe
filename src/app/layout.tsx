@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: `${APP_CONSTANTS.APP_TITLE} | Online Auction`,
-    description: "Modern realtime auction platform with role-based dashboards.",
+    title: `${APP_CONSTANTS.APP_TITLE} | Đấu giá trực tuyến`,
+    description: "Nền tảng đấu giá trực tuyến hiện đại với quản lý đa phân quyền.",
 };
 
 export default function RootLayout({

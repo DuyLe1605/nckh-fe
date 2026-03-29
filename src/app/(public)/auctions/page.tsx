@@ -14,11 +14,11 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { ROUTE_CONSTANTS } from "@/constants/app.constants";
 
 const statusOptions: Array<{ value: AuctionFilterStatus; label: string }> = [
-    { value: "ACTIVE", label: "Active" },
-    { value: "ENDED", label: "Ended" },
-    { value: "SOLD", label: "Sold" },
-    { value: "UNSOLD", label: "Unsold" },
-    { value: "ALL", label: "All" },
+    { value: "ACTIVE", label: "Đang diễn ra" },
+    { value: "ENDED", label: "Đã kết thúc" },
+    { value: "SOLD", label: "Đã bán" },
+    { value: "UNSOLD", label: "Chưa bán được" },
+    { value: "ALL", label: "Tất cả" },
 ];
 
 function formatCurrency(value: string | number) {
@@ -59,9 +59,9 @@ export default function AuctionsListPage() {
     return (
         <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
             <section className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight">Danh sách Auctions</h1>
+                <h1 className="text-3xl font-semibold tracking-tight">Danh sách các phiên đấu giá</h1>
                 <p className="text-sm text-muted-foreground">
-                    Sprint 3: filter/pagination + list/detail qua Query và trạng thái UI qua Zustand.
+                    Bộ lọc và phân trang chuyên sâu qua TanStack Query và Zustand State.
                 </p>
             </section>
 
@@ -101,7 +101,7 @@ export default function AuctionsListPage() {
             </section>
 
             {auctionsQuery.isLoading ? (
-                <p className="text-sm text-muted-foreground">Đang tải auctions...</p>
+                <p className="text-sm text-muted-foreground">Đang tải danh sách...</p>
             ) : auctionsQuery.isError ? (
                 <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                     Không thể tải danh sách auctions. Vui lòng thử lại.

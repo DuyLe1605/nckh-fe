@@ -6,7 +6,7 @@ export default function HomePage() {
         <main className="mx-auto grid min-h-[calc(100vh-84px)] max-w-6xl grid-cols-1 items-center gap-12 px-6 py-12 lg:grid-cols-2">
             <section className="space-y-6">
                 <p className="inline-flex rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-600 dark:text-cyan-400">
-                    Realtime Auction • Sprint 2 in progress
+                    Nền tảng Đấu giá Trực tuyến • Đang phát triển
                 </p>
                 <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
                     Đấu giá trực tuyến tốc độ cao với giao diện premium.
@@ -32,7 +32,7 @@ export default function HomePage() {
                         href={ROUTE_CONSTANTS.AUCTIONS_PREFIX}
                         className="inline-flex h-10 items-center justify-center rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-5 text-sm font-medium text-indigo-600 transition hover:bg-indigo-500/20 dark:text-indigo-300"
                     >
-                        Xem danh sách auction
+                        Xem danh sách đấu giá
                     </Link>
                 </div>
             </section>
@@ -41,13 +41,13 @@ export default function HomePage() {
                 <div className="absolute -right-12 -top-12 size-40 rounded-full bg-indigo-500/20 blur-3xl" />
                 <div className="absolute -bottom-16 -left-16 size-44 rounded-full bg-cyan-500/20 blur-3xl" />
                 <div className="relative space-y-4">
-                    <p className="text-sm font-medium text-muted-foreground">Platform highlights</p>
+                    <p className="text-sm font-medium text-muted-foreground">Tính năng nổi bật</p>
                     <div className="grid gap-3">
                         {[
-                            "Live bid updates qua Socket.IO",
-                            "Auth flow với TanStack Query + Axios",
-                            "Client state rõ ràng bằng Zustand",
-                            "Role route guard ở middleware layer",
+                            "Cập nhật giá theo thời gian thực (Socket.IO)",
+                            "Xác thực tự động không gián đoạn",
+                            "Quản lý trạng thái thông minh",
+                            "Bảo mật quyền truy cập theo vai trò",
                         ].map((item) => (
                             <div
                                 key={item}

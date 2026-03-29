@@ -212,7 +212,7 @@ export default function SellerOrdersPage() {
                                 </div>
                                 <div className="mt-2 grid grid-cols-1 gap-2 text-xs text-muted-foreground md:grid-cols-4">
                                     <p>
-                                        Buyer:{" "}
+                                        Người mua:{" "}
                                         <span className="font-medium text-foreground">
                                             {order.buyer?.fullName ?? "N/A"}
                                         </span>

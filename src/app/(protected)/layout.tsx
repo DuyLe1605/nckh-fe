@@ -5,13 +5,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
 
 const NAV_ITEMS = [
-    { href: ROUTE_CONSTANTS.AUCTIONS_PREFIX, label: "Auctions" },
-    { href: ROUTE_CONSTANTS.DASHBOARD, label: "Dashboard" },
-    { href: ROUTE_CONSTANTS.PRODUCTS, label: "Products" },
-    { href: ROUTE_CONSTANTS.ORDERS, label: "Orders" },
-    { href: ROUTE_CONSTANTS.MY_ORDERS, label: "My Orders" },
-    { href: ROUTE_CONSTANTS.WALLET, label: "Wallet" },
-    { href: ROUTE_CONSTANTS.PROFILE, label: "Profile" },
+    { href: ROUTE_CONSTANTS.AUCTIONS_PREFIX, label: "Đấu giá" },
+    { href: ROUTE_CONSTANTS.DASHBOARD, label: "Tổng quan" },
+    { href: ROUTE_CONSTANTS.PRODUCTS, label: "Sản phẩm của tôi" },
+    { href: ROUTE_CONSTANTS.ORDERS, label: "Quản lý đơn hàng" },
+    { href: ROUTE_CONSTANTS.MY_ORDERS, label: "Đơn mua" },
+    { href: ROUTE_CONSTANTS.WALLET, label: "Ví tiền" },
+    { href: ROUTE_CONSTANTS.PROFILE, label: "Hồ sơ" },
 ] as const;
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
