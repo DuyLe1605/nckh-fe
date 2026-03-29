@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { PublicFooter } from "@/components/common/public-footer";
 import { motion, Variants } from "framer-motion";
 import { useAuctionsQuery } from "@/lib/query/hooks/use-auctions";
 import { ROUTE_CONSTANTS } from "@/constants/app.constants";
@@ -46,6 +47,7 @@ export default function HomePage() {
     const featuredAuctions = featuredAuctionsQuery.data?.products ?? [];
 
     return (
+        <>
         <main className="min-h-screen pb-20 overflow-hidden">
             {/* ─── HERO SECTION ─── */}
             <section className="relative pt-32 pb-40 lg:pt-48 lg:pb-56 overflow-hidden">
@@ -310,5 +312,7 @@ export default function HomePage() {
                 </motion.div>
             </section>
         </main>
+        <PublicFooter />
+        </>
     );
 }
