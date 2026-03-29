@@ -80,6 +80,7 @@ export function LiveBidPanel({
     const [liveEndTime, setLiveEndTime] = useState(effectiveEndTime);
     const timeLeft = useCountdown(liveEndTime);
     const [bidAmount, setBidAmount] = useState("");
+    const [isProxy, setIsProxy] = useState(false);
     const [isOutbid, setIsOutbid] = useState(false);
     const [notification, setNotification] = useState<Notification | null>(null);
     const notifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,13 +121,31 @@ export function LiveBidPanel({
         [productId, setCurrentBidPrice, queryClient, currentUserId],
     );
 
-    useAuctionSocket({ productId, onBidUpdate: handleBidUpdate });
+    const handlePoll = useCallback(async () => {
+        await Promise.all([
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.bids.history(productId) }),
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auctions.detail(productId) })
+        ]);
+    }, [queryClient, productId]);
+
+    const { status: socketStatus, reconnectAttempts } = useAuctionSocket({ 
+        productId, 
+        onBidUpdate: handleBidUpdate,
+        pollFn: handlePoll,
+    });
 
     // ── Bid mutation ──────────────────────────────────────────────────────────
     const placeBidMutation = useMutation({
-        mutationFn: () => placeBid(productId, { bidAmount: Number(bidAmount) }),
+        mutationFn: () => placeBid(productId, { 
+            bidAmount: isProxy ? minBid : Number(bidAmount),
+            ...(isProxy ? { maxAutoBid: Number(bidAmount) } : {})
+        }),
         onSuccess: (data) => {
-            showNotif({ type: "success", text: `✅ Đặt giá thành công! Giá mới: ${formatCurrency(data.newPrice)}` });
+            if (data.instantlyOutbid) {
+                 showNotif({ type: "warning", text: `⚠️ ${data.message ?? "Bạn đã bị vượt giá ngay lập tức bởi một Auto Bid khác cao hơn!"}` });
+            } else {
+                 showNotif({ type: "success", text: `✅ Đặt giá thành công! Giá mới: ${formatCurrency(data.newPrice)}` });
+            }
             setBidAmount("");
             setIsOutbid(false);
         },
@@ -176,11 +195,16 @@ export function LiveBidPanel({
 
             {/* ─── Live Price + Timer ─ */}
             <Card className="border-primary/40 bg-primary/5">
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                     <CardTitle className="flex items-center gap-2 text-lg">
                         <span className="inline-block h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
                         Đang diễn ra
                     </CardTitle>
+                    {socketStatus !== "connected" && (
+                        <Badge variant="outline" className="text-yellow-600 border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:text-yellow-400">
+                            {socketStatus === "reconnecting" ? "Đang kết nối lại..." : "Kết nối yếu (Đang tải lại)"}
+                        </Badge>
+                    )}
                 </CardHeader>
                 <CardContent className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -216,25 +240,43 @@ export function LiveBidPanel({
                         <CardTitle className="text-base">Đặt giá</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleSubmit} className="flex gap-2">
-                            <Input
-                                id="bid-amount-input"
-                                type="number"
-                                min={minBid}
-                                step={bidIncrement}
-                                value={bidAmount}
-                                onChange={(e) => setBidAmount(e.target.value)}
-                                placeholder={`Tối thiểu ${formatCurrency(minBid)}`}
-                                disabled={placeBidMutation.isPending}
-                                className="flex-1"
-                            />
-                            <Button
-                                type="submit"
-                                disabled={placeBidMutation.isPending}
-                                className="shrink-0"
-                            >
-                                {placeBidMutation.isPending ? "Đang đặt..." : "Đặt giá"}
-                            </Button>
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                                <Input
+                                    id="bid-amount-input"
+                                    type="number"
+                                    min={minBid}
+                                    step={bidIncrement}
+                                    value={bidAmount}
+                                    onChange={(e) => setBidAmount(e.target.value)}
+                                    placeholder={isProxy ? `Mức giá tự động tối đa (Tối thiểu ${formatCurrency(minBid)})` : `Tối thiểu ${formatCurrency(minBid)}`}
+                                    disabled={placeBidMutation.isPending}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    type="submit"
+                                    disabled={placeBidMutation.isPending}
+                                    className="shrink-0"
+                                >
+                                    {placeBidMutation.isPending ? "Đang đặt..." : "Đặt giá"}
+                                </Button>
+                            </div>
+                            <div className="flex items-center space-x-2 select-none">
+                                <input
+                                    type="checkbox"
+                                    id="proxy-checkbox"
+                                    checked={isProxy}
+                                    onChange={(e) => setIsProxy(e.target.checked)}
+                                    disabled={placeBidMutation.isPending}
+                                    className="h-4 w-4 rounded border-primary bg-background text-primary focus:ring-primary disabled:opacity-50"
+                                />
+                                <label
+                                    htmlFor="proxy-checkbox"
+                                    className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground"
+                                >
+                                    Đặt giá tự động (Proxy Bid) bảo vệ quyền nâng giá
+                                </label>
+                            </div>
                         </form>
                     </CardContent>
                 </Card>

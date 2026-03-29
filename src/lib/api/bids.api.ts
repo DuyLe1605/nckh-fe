@@ -27,6 +27,7 @@ type PlaceBidResponse = {
     message: string;
     bid: BidItem;
     newPrice: number;
+    instantlyOutbid?: boolean;
 };
 
 type BidHistoryResponse = {
