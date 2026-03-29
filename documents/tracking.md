@@ -100,7 +100,7 @@
 
 | Task ID | Task                        | Status   | Priority | Notes                |
 | ------- | --------------------------- | -------- | -------- | -------------------- |
-| QP-001  | Unit tests (hooks, utils)   | [ ] Todo | P2       | Critical hooks first |
+| QP-001  | Unit tests (hooks, utils)   | [~] Partial | P2       | Auth/Profile hooks: 9 tests pass |
 | QP-002  | E2E tests (auth + bid flow) | [ ] Todo | P2       | Playwright/Cypress   |
 | QP-003  | Error boundaries            | [ ] Todo | P2       | Graceful error UI    |
 | QP-004  | Bundle optimization         | [ ] Todo | P3       | Code splitting       |
@@ -112,13 +112,15 @@
 
 ### 🔥 Đang làm (In Progress)
 
-- (trống — Phase 5 hoàn thành)
+- [~] QP-001: Unit tests cho auth/profile hooks (Vitest) — 9 tests pass
 
 ### 📋 Tiếp theo (Next up)
 
-- [ ] QP-001: Unit tests cho auth hooks/profile flows
+- [ ] QP-001 (tiếp): Unit tests cho utils/hook còn lại (socket, query helpers, stores)
 
 ### ✅ Hoàn thành gần đây
+
+- [x] QP-001 (partial): Setup Vitest + jsdom + test scripts; thêm 9 unit tests cho `use-auth` và `use-profile`
 
 - [x] Cập nhật footer public/protected với chữ ký cuối: **Đội Ngũ NCKH DH13C1**
 - [x] Auth flow: popup OTP sau đăng ký + cho phép xác thực sau

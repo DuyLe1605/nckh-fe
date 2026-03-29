@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ROUTE_CONSTANTS } from "@/constants/app.constants";
 import { useResendVerificationMutation, useVerifyEmailMutation } from "@/lib/query/hooks/use-auth";
 
 type VerifyAccountDialogProps = {
@@ -126,6 +128,16 @@ export function VerifyAccountDialog({
                                   : "Gửi lại mã xác thực"}
                         </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                        Quên mật khẩu?{" "}
+                        <Link
+                            href={ROUTE_CONSTANTS.CHANGE_PASSWORD}
+                            className="font-medium text-primary hover:underline"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            Đổi mật khẩu tại đây
+                        </Link>
+                    </p>
                     <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         {showSkipAction ? (
                             <Button type="button" variant="outline" onClick={handleSkip}>

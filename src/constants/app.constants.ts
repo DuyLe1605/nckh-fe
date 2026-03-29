@@ -36,6 +36,7 @@ export const ROUTE_CONSTANTS = {
     LOGIN: "/login",
     REGISTER: "/register",
     FORGOT_PASSWORD: "/forgot-password",
+    CHANGE_PASSWORD: "/change-password",
     PROFILE: "/profile",
     AUCTIONS_PREFIX: "/auctions",
     DASHBOARD: "/dashboard",
