@@ -1,23 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { ROUTE_CONSTANTS } from "@/constants/app.constants";
 import { useResendVerificationMutation, useVerifyEmailMutation } from "@/lib/query/hooks/use-auth";
+import { extractAuthAttribution, isEmailAttribution, logAuthFunnelEvent } from "@/lib/analytics/auth-funnel";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, KeyRound, Mail, ShieldCheck } from "lucide-react";
 
-export default function VerifyAccountPage() {
+function VerifyAccountContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialEmail = searchParams.get("email") ?? "";
+    const initialOtp = (searchParams.get("otp") ?? "").replace(/[^0-9]/g, "").slice(0, 6);
+    const autoVerifyFromLink = searchParams.get("auto") === "1";
     const source = searchParams.get("from");
 
+    const attribution = useMemo(() => extractAuthAttribution(searchParams), [searchParams]);
+
     const [email, setEmail] = useState(initialEmail);
-    const [otp, setOtp] = useState("");
+    const [otp, setOtp] = useState(initialOtp);
     const [countdown, setCountdown] = useState(0);
+    const hasAutoVerifiedRef = useRef(false);
 
     const verifyMutation = useVerifyEmailMutation();
     const resendMutation = useResendVerificationMutation();
@@ -25,6 +31,10 @@ export default function VerifyAccountPage() {
     useEffect(() => {
         setEmail(initialEmail);
     }, [initialEmail]);
+
+    useEffect(() => {
+        setOtp(initialOtp);
+    }, [initialOtp]);
 
     useEffect(() => {
         let timer: ReturnType<typeof setTimeout> | undefined;
@@ -41,6 +51,53 @@ export default function VerifyAccountPage() {
         if (source === "profile") return ROUTE_CONSTANTS.PROFILE;
         return ROUTE_CONSTANTS.LOGIN;
     }, [source]);
+
+    useEffect(() => {
+        if (!isEmailAttribution(attribution)) return;
+
+        logAuthFunnelEvent({
+            eventName: "auth_email_link_clicked",
+            flow: "verify",
+            email: initialEmail || email,
+            dedupeKey: `email-click-verify:${initialEmail || "unknown"}`,
+            ...attribution,
+        });
+    }, [attribution, email, initialEmail]);
+
+    const trackVerifySuccess = (verifiedEmail: string) => {
+        if (!isEmailAttribution(attribution)) return;
+
+        logAuthFunnelEvent({
+            eventName: "auth_verify_success",
+            flow: "verify",
+            email: verifiedEmail,
+            dedupeKey: `verify-success:${verifiedEmail || "unknown"}`,
+            ...attribution,
+        });
+    };
+
+    useEffect(() => {
+        if (!autoVerifyFromLink || hasAutoVerifiedRef.current) return;
+        if (!initialEmail.trim() || initialOtp.length < 6) return;
+
+        hasAutoVerifiedRef.current = true;
+
+        verifyMutation.mutate(
+            { email: initialEmail.trim(), otp: initialOtp },
+            {
+                onSuccess: (data) => {
+                    trackVerifySuccess(initialEmail.trim());
+                    toast.success("Xác thực thành công", { description: data.message });
+                    router.push(backRoute);
+                },
+                onError: (error: { message?: string }) => {
+                    toast.error("Liên kết xác thực không còn hợp lệ", {
+                        description: error?.message || "Vui lòng nhập OTP thủ công hoặc yêu cầu gửi lại mã.",
+                    });
+                },
+            },
+        );
+    }, [autoVerifyFromLink, backRoute, initialEmail, initialOtp, router, verifyMutation]);
 
     const handleVerify = (event: React.FormEvent) => {
         event.preventDefault();
@@ -59,6 +116,7 @@ export default function VerifyAccountPage() {
             { email: email.trim(), otp },
             {
                 onSuccess: (data) => {
+                    trackVerifySuccess(email.trim());
                     toast.success("Xác thực thành công", { description: data.message });
                     router.push(backRoute);
                 },
@@ -112,7 +170,10 @@ export default function VerifyAccountPage() {
                         <li>Nếu không thấy mail, kiểm tra cả mục Spam/Junk.</li>
                         <li>
                             Nếu quên mật khẩu, bạn có thể sang trang{" "}
-                            <Link href={ROUTE_CONSTANTS.CHANGE_PASSWORD} className="font-medium text-primary hover:underline">
+                            <Link
+                                href={ROUTE_CONSTANTS.CHANGE_PASSWORD}
+                                className="font-medium text-primary hover:underline"
+                            >
                                 đổi mật khẩu
                             </Link>
                             .
@@ -177,7 +238,12 @@ export default function VerifyAccountPage() {
                               : "Gửi lại mã xác thực"}
                     </Button>
 
-                    <Button type="submit" size="lg" className="w-full" disabled={verifyMutation.isPending || otp.length < 6}>
+                    <Button
+                        type="submit"
+                        size="lg"
+                        className="w-full"
+                        disabled={verifyMutation.isPending || otp.length < 6}
+                    >
                         {verifyMutation.isPending ? "Đang xác thực..." : "Xác nhận OTP"}
                     </Button>
                 </form>
@@ -187,11 +253,24 @@ export default function VerifyAccountPage() {
                         <ArrowLeft className="mr-1 h-4 w-4" />
                         {source === "profile" ? "Quay lại hồ sơ" : "Quay lại đăng nhập"}
                     </Button>
-                    <Button type="button" variant="secondary" className="w-full" onClick={() => router.push(ROUTE_CONSTANTS.CHANGE_PASSWORD)}>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        className="w-full"
+                        onClick={() => router.push(ROUTE_CONSTANTS.CHANGE_PASSWORD)}
+                    >
                         Đổi mật khẩu
                     </Button>
                 </div>
             </section>
         </div>
+    );
+}
+
+export default function VerifyAccountPage() {
+    return (
+        <Suspense fallback={<div className="mx-auto w-full max-w-4xl px-6 py-10 text-sm text-muted-foreground">Đang tải...</div>}>
+            <VerifyAccountContent />
+        </Suspense>
     );
 }

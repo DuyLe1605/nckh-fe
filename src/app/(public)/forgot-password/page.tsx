@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import { toast } from "sonner";
 import { ROUTE_CONSTANTS } from "@/constants/app.constants";
 import { useForgotPasswordMutation, useResetPasswordMutation } from "@/lib/query/hooks/use-auth";
+import { extractAuthAttribution, isEmailAttribution, logAuthFunnelEvent } from "@/lib/analytics/auth-funnel";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Mail, KeyRound, ArrowLeft, RefreshCw } from "lucide-react";
 
@@ -29,21 +30,50 @@ const resetSchema = z
 type EmailFormValues = z.infer<typeof emailSchema>;
 type ResetFormValues = z.infer<typeof resetSchema>;
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
     const router = useRouter();
-    const [step, setStep] = useState<1 | 2>(1);
-    const [email, setEmail] = useState("");
+    const searchParams = useSearchParams();
+    const initialEmail = searchParams.get("email") ?? "";
+    const initialOtp = (searchParams.get("otp") ?? "").replace(/[^0-9]/g, "").slice(0, 6);
+    const attribution = useMemo(() => extractAuthAttribution(searchParams), [searchParams]);
+
+    const [step, setStep] = useState<1 | 2>(initialOtp ? 2 : 1);
+    const [email, setEmail] = useState(initialEmail);
     const [apiMessage, setApiMessage] = useState<string | null>(null);
     const forgotPasswordMutation = useForgotPasswordMutation();
     const resetPasswordMutation = useResetPasswordMutation();
 
     const emailForm = useForm<EmailFormValues>({
-        defaultValues: { email: "" },
+        defaultValues: { email: initialEmail },
     });
 
     const resetForm = useForm<ResetFormValues>({
-        defaultValues: { otp: "", newPassword: "", confirmPassword: "" },
+        defaultValues: { otp: initialOtp, newPassword: "", confirmPassword: "" },
     });
+
+    useEffect(() => {
+        if (!isEmailAttribution(attribution)) return;
+
+        logAuthFunnelEvent({
+            eventName: "auth_email_link_clicked",
+            flow: "reset",
+            email: initialEmail || email,
+            dedupeKey: `email-click-reset:${initialEmail || "unknown"}`,
+            ...attribution,
+        });
+    }, [attribution, email, initialEmail]);
+
+    const trackResetSuccess = (targetEmail: string) => {
+        if (!isEmailAttribution(attribution)) return;
+
+        logAuthFunnelEvent({
+            eventName: "auth_reset_success",
+            flow: "reset",
+            email: targetEmail,
+            dedupeKey: `reset-success:${targetEmail || "unknown"}`,
+            ...attribution,
+        });
+    };
 
     const requestOtp = (emailValue: string) => {
         forgotPasswordMutation.mutate(
@@ -55,7 +85,7 @@ export default function ForgotPasswordPage() {
                     setApiMessage(null);
                     toast.success("Đã gửi mã xác thực", { description: data.message });
                 },
-                onError: (error: any) => {
+                onError: (error: { message?: string }) => {
                     const message = error?.message ?? "Có lỗi xảy ra, vui lòng thử lại.";
                     setApiMessage(message);
                     toast.error("Không thể gửi mã", { description: message });
@@ -69,10 +99,11 @@ export default function ForgotPasswordPage() {
             { email, otp: payload.otp, newPassword: payload.newPassword },
             {
                 onSuccess: (data) => {
+                    trackResetSuccess(email.trim());
                     toast.success("Đổi mật khẩu thành công", { description: data.message });
                     router.push(ROUTE_CONSTANTS.LOGIN);
                 },
-                onError: (error: any) => {
+                onError: (error: { message?: string }) => {
                     const message = error?.message ?? "Có lỗi xảy ra, vui lòng thử lại.";
                     setApiMessage(message);
                     toast.error("Đặt lại mật khẩu thất bại", { description: message });
@@ -138,7 +169,22 @@ export default function ForgotPasswordPage() {
                         className="space-y-4"
                         onSubmit={emailForm.handleSubmit((values) => {
                             setApiMessage(null);
-                            requestOtp(values.email);
+                            emailForm.clearErrors();
+
+                            const parsed = emailSchema.safeParse(values);
+                            if (!parsed.success) {
+                                parsed.error.issues.forEach((issue) => {
+                                    const field = issue.path[0] as keyof EmailFormValues | undefined;
+                                    if (!field) return;
+                                    emailForm.setError(field, {
+                                        type: "manual",
+                                        message: issue.message,
+                                    });
+                                });
+                                return;
+                            }
+
+                            requestOtp(parsed.data.email);
                         })}
                     >
                         <div className="space-y-1.5">
@@ -171,7 +217,22 @@ export default function ForgotPasswordPage() {
                         className="space-y-4"
                         onSubmit={resetForm.handleSubmit((values) => {
                             setApiMessage(null);
-                            submitResetPassword(values);
+                            resetForm.clearErrors();
+
+                            const parsed = resetSchema.safeParse(values);
+                            if (!parsed.success) {
+                                parsed.error.issues.forEach((issue) => {
+                                    const field = issue.path[0] as keyof ResetFormValues | undefined;
+                                    if (!field) return;
+                                    resetForm.setError(field, {
+                                        type: "manual",
+                                        message: issue.message,
+                                    });
+                                });
+                                return;
+                            }
+
+                            submitResetPassword(parsed.data);
                         })}
                     >
                         <div className="space-y-1.5">
@@ -273,5 +334,13 @@ export default function ForgotPasswordPage() {
                 </p>
             </section>
         </div>
+    );
+}
+
+export default function ForgotPasswordPage() {
+    return (
+        <Suspense fallback={<div className="mx-auto w-full max-w-4xl px-6 py-10 text-sm text-muted-foreground">Đang tải...</div>}>
+            <ForgotPasswordContent />
+        </Suspense>
     );
 }
