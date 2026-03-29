@@ -143,3 +143,6 @@
 
 - [x] EX-001: Việt hóa toàn bộ giao diện (Localization)
 - [x] EX-002: Hoàn thiện Dark Mode (Tailwind v4 `class` strategy & Hydration fix)
+- [x] EX-003: Replace raw emoji icons with Lucide icons across Frontend
+- [x] EX-004: Centralize all React Query hooks to `FE/src/lib/query/hooks/`
+- [x] EX-005: Integrate Shadcn Chart structure for Dashboard Analytics

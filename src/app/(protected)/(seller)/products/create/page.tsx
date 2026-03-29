@@ -7,11 +7,12 @@ import { z } from "zod/v4";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createProduct, uploadProductImages, type CreateProductPayload } from "@/lib/api/products.api";
 import { listCategories } from "@/lib/api/categories.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useCategoriesQuery } from "@/lib/query/hooks/use-categories";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CheckCircle, XCircle, Rocket } from "lucide-react";
 
 const productSchema = z.object({
     title: z.string().min(3, "Tiêu đề tối thiểu 3 ký tự"),
@@ -46,7 +47,7 @@ function calculateRemain(endTime: string) {
     return `${hours}h ${remainMinutes}m`;
 }
 
-type Notification = { type: "success" | "error"; text: string };
+type Notification = { type: "success" | "error"; text: React.ReactNode };
 
 export default function CreateProductPage() {
     const router = useRouter();
@@ -54,11 +55,7 @@ export default function CreateProductPage() {
     const [images, setImages] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
 
-    const categoriesQuery = useQuery({
-        queryKey: QUERY_KEYS.categories.list,
-        queryFn: () => listCategories(),
-        staleTime: 60_000,
-    });
+    const categoriesQuery = useCategoriesQuery();
 
     const form = useForm<ProductFormValues>({
         defaultValues: {
@@ -89,11 +86,11 @@ export default function CreateProductPage() {
             return result;
         },
         onSuccess: (data) => {
-            setNotification({ type: "success", text: `✅ Sản phẩm được tạo thành công!` });
+            setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Sản phẩm được tạo thành công!</> });
             setTimeout(() => router.push("/products"), 1500);
         },
         onError: (error: { message?: string }) => {
-            setNotification({ type: "error", text: `❌ ${error?.message ?? "Tạo sản phẩm thất bại"}` });
+            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> {error?.message ?? "Tạo sản phẩm thất bại"}</> });
             setIsUploading(false);
             setTimeout(() => setNotification(null), 4000);
         },
@@ -146,7 +143,7 @@ export default function CreateProductPage() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (files.length + images.length > 5) {
-            setNotification({ type: "error", text: "❌ Tối đa 5 ảnh" });
+            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> Tối đa 5 ảnh</> });
             return;
         }
 
@@ -324,7 +321,7 @@ export default function CreateProductPage() {
                                     ? isUploading
                                         ? "Đang tải ảnh lên..."
                                         : "Đang tạo cơ sở..."
-                                    : "🚀 Tạo sản phẩm"}
+                                    : <><Rocket className="mr-1.5 inline-block h-4 w-4" /> Tạo sản phẩm</>}
                             </Button>
                         </form>
                     </CardContent>

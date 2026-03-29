@@ -1,19 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-    listOrders,
-    updateOrderStatus,
-    type OrderItem,
-    type OrderStatus,
-} from "@/lib/api/orders.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useOrdersQuery, useUpdateOrderMutation } from "@/lib/query/hooks/use-orders";
+import { type OrderItem, type OrderStatus } from "@/lib/api/orders.api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReviewDialog } from "@/components/auction/ReviewDialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 
 function formatCurrency(value: string | number) {
     const num = Number(value);
@@ -66,32 +61,10 @@ function OrderStatusBadge({ status }: { status: string }) {
 type Notification = { type: "success" | "error"; text: string };
 
 export default function BidderOrdersPage() {
-    const queryClient = useQueryClient();
-    const [notification, setNotification] = useState<Notification | null>(null);
     const [statusFilter, setStatusFilter] = useState<OrderStatus | "">("");
 
-    const ordersQuery = useQuery({
-        queryKey: QUERY_KEYS.orders.list(
-            statusFilter ? { status: statusFilter } : undefined,
-        ),
-        queryFn: () =>
-            listOrders(statusFilter ? { status: statusFilter as OrderStatus } : {}),
-        staleTime: 15_000,
-    });
-
-    const updateStatusMutation = useMutation({
-        mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
-            updateOrderStatus(id, status),
-        onSuccess: (data) => {
-            setNotification({ type: "success", text: `✅ ${data.message}` });
-            void queryClient.invalidateQueries({ queryKey: ["orders"] });
-            setTimeout(() => setNotification(null), 4000);
-        },
-        onError: (error: { message?: string }) => {
-            setNotification({ type: "error", text: `❌ ${error?.message ?? "Cập nhật thất bại"}` });
-            setTimeout(() => setNotification(null), 4000);
-        },
-    });
+    const ordersQuery = useOrdersQuery(statusFilter);
+    const updateStatusMutation = useUpdateOrderMutation();
 
     const orders: OrderItem[] = ordersQuery.data?.orders ?? [];
     const pagination = ordersQuery.data?.pagination;
@@ -108,20 +81,6 @@ export default function BidderOrdersPage() {
                     Theo dõi các đơn hàng từ phiên đấu giá bạn đã thắng.
                 </p>
             </header>
-
-            {/* ─── Notification ─ */}
-            {notification && (
-                <div
-                    className={
-                        "rounded-lg border px-4 py-3 text-sm " +
-                        (notification.type === "success"
-                            ? "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-300"
-                            : "border-destructive/40 bg-destructive/10 text-destructive")
-                    }
-                >
-                    {notification.text}
-                </div>
-            )}
 
             {/* ─── Stats ─ */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -253,7 +212,7 @@ export default function BidderOrdersPage() {
                                             disabled={updateStatusMutation.isPending}
                                             className="text-xs"
                                         >
-                                            ✅ Xác nhận đã nhận hàng
+                                            <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Xác nhận đã nhận hàng
                                         </Button>
                                     )}
                                     {order.status === "SHIPPED" && (
@@ -269,7 +228,7 @@ export default function BidderOrdersPage() {
                                             disabled={updateStatusMutation.isPending}
                                             className="text-xs"
                                         >
-                                            ⚠️ Báo tranh chấp
+                                            <AlertTriangle className="mr-1 h-3.5 w-3.5" /> Báo tranh chấp
                                         </Button>
                                     )}
                                     {order.status === "COMPLETED" && (

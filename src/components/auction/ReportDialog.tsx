@@ -5,16 +5,17 @@ import { useMutation } from "@tanstack/react-query";
 import { createReport } from "@/lib/api/reports.api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Flag, CheckCircle, XCircle } from "lucide-react";
 
 export function ReportDialog({ reportedUserId, productId }: { reportedUserId: string; productId?: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const [reason, setReason] = useState("");
-    const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [notification, setNotification] = useState<{ type: "success" | "error"; text: React.ReactNode } | null>(null);
 
     const reportMutation = useMutation({
         mutationFn: () => createReport({ reportedUserId, productId, reason }),
         onSuccess: () => {
-            setNotification({ type: "success", text: "✅ Đã gửi báo cáo thành công" });
+            setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Đã gửi báo cáo thành công</> });
             setTimeout(() => {
                 setIsOpen(false);
                 setReason("");
@@ -22,14 +23,14 @@ export function ReportDialog({ reportedUserId, productId }: { reportedUserId: st
             }, 2000);
         },
         onError: (err: any) => {
-            setNotification({ type: "error", text: `❌ Lỗi: ${err.message}` });
+            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> Lỗi: {err.message}</> });
         },
     });
 
     if (!isOpen) {
         return (
             <Button variant="outline" size="sm" onClick={() => setIsOpen(true)} className="text-red-500 border-red-500/20 hover:bg-red-500/10 hover:text-red-600">
-                🚩 Báo cáo vi phạm
+                <Flag className="mr-1.5 h-4 w-4" /> Báo cáo vi phạm
             </Button>
         );
     }

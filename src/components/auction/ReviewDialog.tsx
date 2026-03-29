@@ -45,11 +45,13 @@ export function ReviewDialog({ orderId, sellerName }: ReviewDialogProps) {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-xs">
-                    ⭐ Đánh giá Người bán
-                </Button>
-            </DialogTrigger>
+            <DialogTrigger
+                render={
+                    <Button variant="outline" size="sm" className="text-xs">
+                        <Star className="mr-1 h-3 w-3" /> Đánh giá Người bán
+                    </Button>
+                }
+            />
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Đánh giá & Nhận xét</DialogTitle>

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, CheckCircle, XCircle, Trophy } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,7 +24,7 @@ type LiveBidPanelProps = {
     currentUserId?: string;
 };
 
-type Notification = { type: "success" | "error" | "warning"; text: string };
+type Notification = { type: "success" | "error" | "warning"; text: React.ReactNode };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -114,8 +115,7 @@ export function LiveBidPanel({
                 setLiveEndTime(payload.effectiveEndTime);
             }
             if (currentUserId && payload.prevWinnerBidderId === currentUserId) {
-                setIsOutbid(true);
-                showNotif({ type: "warning", text: "⚠️ Bạn đã bị outbid! Đặt giá cao hơn để giành lại." });
+                showNotif({ type: "warning", text: <><AlertTriangle className="mr-1 inline-block h-4 w-4" /> Bạn đã bị outbid! Đặt giá cao hơn để giành lại.</> });
             }
         },
         [productId, setCurrentBidPrice, queryClient, currentUserId],
@@ -142,15 +142,15 @@ export function LiveBidPanel({
         }),
         onSuccess: (data) => {
             if (data.instantlyOutbid) {
-                 showNotif({ type: "warning", text: `⚠️ ${data.message ?? "Bạn đã bị vượt giá ngay lập tức bởi một Auto Bid khác cao hơn!"}` });
+                 showNotif({ type: "warning", text: <><AlertTriangle className="mr-1 inline-block h-4 w-4" /> {data.message ?? "Bạn đã bị vượt giá ngay lập tức bởi một Auto Bid khác cao hơn!"}</> });
             } else {
-                 showNotif({ type: "success", text: `✅ Đặt giá thành công! Giá mới: ${formatCurrency(data.newPrice)}` });
+                 showNotif({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Đặt giá thành công! Giá mới: {formatCurrency(data.newPrice)}</> });
             }
             setBidAmount("");
             setIsOutbid(false);
         },
         onError: (error: { message?: string }) => {
-            showNotif({ type: "error", text: `❌ ${error?.message ?? "Đặt giá thất bại. Vui lòng thử lại."}` });
+            showNotif({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> {error?.message ?? "Đặt giá thất bại. Vui lòng thử lại."}</> });
         },
     });
 
@@ -229,7 +229,7 @@ export function LiveBidPanel({
             {/* ─── Outbid alert ─ */}
             {isOutbid && (
                 <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    ⚠️ Bạn đã bị vượt giá. Đặt lại để tiếp tục tham gia.
+                    <AlertTriangle className="mr-1.5 inline h-4 w-4" /> Bạn đã bị vượt giá. Đặt lại để tiếp tục tham gia.
                 </div>
             )}
 
@@ -321,7 +321,7 @@ export function LiveBidPanel({
                                         </span>
                                         {bid.status === "WINNING" && (
                                             <Badge variant="default" className="text-xs">
-                                                🏆 Dẫn đầu
+                                                <Trophy className="mr-1 inline-block h-3 w-3" /> Dẫn đầu
                                             </Badge>
                                         )}
                                         {bid.status === "OUTBID" && (

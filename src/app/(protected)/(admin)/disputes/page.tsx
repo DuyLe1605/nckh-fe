@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { listReports, updateReportStatus, type ReportItem, type ReportStatus } from "@/lib/api/reports.api";
+import { type ReportItem, type ReportStatus } from "@/lib/api/reports.api";
+import { useReportsQuery, useUpdateReportStatusMutation } from "@/lib/query/hooks/use-reports";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, XCircle } from "lucide-react";
 
 const REPORT_STATUS_LABELS: Record<ReportStatus, { label: string; className: string }> = {
     PENDING: { label: "Chờ xử lý", className: "border-yellow-500/40 bg-yellow-500/10 text-yellow-700" },
@@ -16,27 +17,13 @@ const REPORT_STATUS_LABELS: Record<ReportStatus, { label: string; className: str
 };
 
 export default function AdminReportsPage() {
-    const queryClient = useQueryClient();
+
     const [statusFilter, setStatusFilter] = useState<ReportStatus | "">("");
-    const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [notification, setNotification] = useState<{ type: "success" | "error"; text: React.ReactNode } | null>(null);
 
-    const reportsQuery = useQuery({
-        queryKey: ["reports", statusFilter],
-        queryFn: () => listReports(statusFilter ? { status: statusFilter } : {}),
-        staleTime: 15_000,
-    });
+    const reportsQuery = useReportsQuery(statusFilter ? { status: statusFilter } : {});
 
-    const updateStatusMutation = useMutation({
-        mutationFn: ({ id, status }: { id: string; status: ReportStatus }) => updateReportStatus(id, { status }),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["reports"] });
-            setNotification({ type: "success", text: `✅ Đã cập nhật trạng thái report.` });
-            setTimeout(() => setNotification(null), 3000);
-        },
-        onError: (error: any) => {
-            setNotification({ type: "error", text: `❌ Cập nhật thất bại: ${error.message}` });
-        },
-    });
+    const updateStatusMutation = useUpdateReportStatusMutation();
 
     const reports: ReportItem[] = reportsQuery.data?.reports || [];
     const pagination = reportsQuery.data?.pagination;
@@ -136,7 +123,15 @@ export default function AdminReportsPage() {
                                                     variant="secondary"
                                                     className="h-7 text-xs"
                                                     disabled={updateStatusMutation.isPending}
-                                                    onClick={() => updateStatusMutation.mutate({ id: report.id, status: status as ReportStatus })}
+                                                    onClick={() => updateStatusMutation.mutate({ id: report.id, status: status as ReportStatus }, {
+                                                        onSuccess: () => {
+                                                            setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Đã cập nhật trạng thái report.</> });
+                                                            setTimeout(() => setNotification(null), 3000);
+                                                        },
+                                                        onError: (error: any) => {
+                                                            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> Cập nhật thất bại: {error.message}</> });
+                                                        }
+                                                    })}
                                                 >
                                                     Chuyển sang {cfg.label}
                                                 </Button>

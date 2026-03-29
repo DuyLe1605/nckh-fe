@@ -12,14 +12,17 @@ import {
     deleteProductImage,
     type UpdateProductPayload,
 } from "@/lib/api/products.api";
-import { listCategories } from "@/lib/api/categories.api";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { listCategories } from "@/lib/api/categories.api";
+import { useProductDetailQuery } from "@/lib/query/hooks/use-products";
+import { useCategoriesQuery } from "@/lib/query/hooks/use-categories";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { APP_CONSTANTS } from "@/constants/app.constants";
+import { CheckCircle, XCircle, AlertTriangle, Save } from "lucide-react";
 
 const productSchema = z.object({
     title: z.string().min(3, "Tiêu đề tối thiểu 3 ký tự"),
@@ -42,7 +45,7 @@ function toDateTimeLocalValue(iso: string) {
     return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
 }
 
-type Notification = { type: "success" | "error"; text: string };
+type Notification = { type: "success" | "error"; text: React.ReactNode };
 
 export default function EditProductPage() {
     const router = useRouter();
@@ -53,17 +56,9 @@ export default function EditProductPage() {
     const [newImages, setNewImages] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
 
-    const categoriesQuery = useQuery({
-        queryKey: QUERY_KEYS.categories.list,
-        queryFn: () => listCategories(),
-        staleTime: 60_000,
-    });
+    const categoriesQuery = useCategoriesQuery();
 
-    const productQuery = useQuery({
-        queryKey: QUERY_KEYS.products.detail(productId),
-        queryFn: () => getProductDetail(productId),
-        enabled: !!productId,
-    });
+    const productQuery = useProductDetailQuery(productId);
 
     const form = useForm<ProductFormValues>();
 
@@ -101,11 +96,11 @@ export default function EditProductPage() {
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.products.detail(productId) });
-            setNotification({ type: "success", text: `✅ Sản phẩm được cập nhật thành công!` });
+            setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Sản phẩm được cập nhật thành công!</> });
             setTimeout(() => router.push("/products"), 1500);
         },
         onError: (error: { message?: string }) => {
-            setNotification({ type: "error", text: `❌ ${error?.message ?? "Cập nhật thất bại"}` });
+            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> {error?.message ?? "Cập nhật thất bại"}</> });
             setIsUploading(false);
             setTimeout(() => setNotification(null), 4000);
         },
@@ -114,11 +109,11 @@ export default function EditProductPage() {
     const deleteImageMutation = useMutation({
         mutationFn: (index: number) => deleteProductImage(productId, index),
         onSuccess: () => {
-            setNotification({ type: "success", text: "✅ Đã xóa ảnh" });
+            setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Đã xóa ảnh</> });
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.products.detail(productId) });
         },
         onError: () => {
-            setNotification({ type: "error", text: "❌ Xóa ảnh thất bại" });
+            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> Xóa ảnh thất bại</> });
         },
     });
 
@@ -166,7 +161,7 @@ export default function EditProductPage() {
         const files = Array.from(e.target.files || []);
         const existingCount = product?.imageUrls?.length ?? 0;
         if (files.length + newImages.length + existingCount > 5) {
-            setNotification({ type: "error", text: "❌ Tối đa 5 ảnh tổng cộng" });
+            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> Tối đa 5 ảnh tổng cộng</> });
             return;
         }
 
@@ -212,7 +207,7 @@ export default function EditProductPage() {
 
             {isActive && (
                 <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
-                    ⚠️ Sản phẩm đang trong trạng thái ACTIVE — không thể chỉnh sửa.
+                    <AlertTriangle className="mr-1.5 inline-block h-4 w-4" /> Sản phẩm đang trong trạng thái ACTIVE — không thể chỉnh sửa.
                 </div>
             )}
 
@@ -369,7 +364,7 @@ export default function EditProductPage() {
                                         ? isUploading
                                             ? "Đang tải ảnh lên..."
                                             : "Đang cập nhật..."
-                                        : "💾 Lưu thay đổi"}
+                                        : <><Save className="mr-1.5 inline-block h-4 w-4" /> Lưu thay đổi</>}
                                 </Button>
                                 <Button
                                     type="button"

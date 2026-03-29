@@ -3,19 +3,18 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-    listCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    type CategoryItem,
-} from "@/lib/api/categories.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { type CategoryItem } from "@/lib/api/categories.api";
+import { 
+    useCategoriesQuery, 
+    useCreateCategoryMutation, 
+    useUpdateCategoryMutation, 
+    useDeleteCategoryMutation 
+} from "@/lib/query/hooks/use-categories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, XCircle, Save, Plus } from "lucide-react";
 
 const categorySchema = z.object({
     name: z.string().min(2, "Tên danh mục ít nhất 2 ký tự"),
@@ -24,17 +23,16 @@ const categorySchema = z.object({
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
-type Notification = { type: "success" | "error"; text: string };
+type Notification = { type: "success" | "error"; text: React.ReactNode };
 
 export default function AdminCategoriesPage() {
-    const queryClient = useQueryClient();
     const [notification, setNotification] = useState<Notification | null>(null);
     const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
 
-    const categoriesQuery = useQuery({
-        queryKey: QUERY_KEYS.categories.list,
-        queryFn: () => listCategories(),
-    });
+    const categoriesQuery = useCategoriesQuery();
+    const createMutation = useCreateCategoryMutation();
+    const updateMutation = useUpdateCategoryMutation();
+    const deleteMutation = useDeleteCategoryMutation();
 
     const form = useForm<CategoryFormValues>({
         defaultValues: {
@@ -59,43 +57,19 @@ export default function AdminCategoriesPage() {
         form.reset({ name: "", description: "", parentId: "" });
     };
 
-    const createMutation = useMutation({
-        mutationFn: (payload: CategoryFormValues) => createCategory(payload),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories.list });
-            setNotification({ type: "success", text: `✅ Đã tạo danh mục: ${data.category.name}` });
-            handleCancelEdit();
-            setTimeout(() => setNotification(null), 3000);
-        },
-        onError: (error: any) => {
-            setNotification({ type: "error", text: `❌ Lỗi: ${error.message}` });
-        },
-    });
-
-    const updateMutation = useMutation({
-        mutationFn: ({ id, payload }: { id: string; payload: CategoryFormValues }) => updateCategory(id, payload),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories.list });
-            setNotification({ type: "success", text: `✅ Đã cập nhật danh mục: ${data.category.name}` });
-            handleCancelEdit();
-            setTimeout(() => setNotification(null), 3000);
-        },
-        onError: (error: any) => {
-            setNotification({ type: "error", text: `❌ Lỗi: ${error.message}` });
-        },
-    });
-
-    const deleteMutation = useMutation({
-        mutationFn: (id: string) => deleteCategory(id),
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories.list });
-            setNotification({ type: "success", text: `✅ Đã xóa danh mục` });
-            setTimeout(() => setNotification(null), 3000);
-        },
-        onError: (error: any) => {
-            setNotification({ type: "error", text: `❌ Không thể xóa danh mục (có thể do đang có sản phẩm)` });
-        },
-    });
+    const handleDelete = (cat: CategoryItem) => {
+        if (window.confirm(`Xóa danh mục "${cat.name}"?`)) {
+            deleteMutation.mutate(cat.id, {
+                onSuccess: () => {
+                    setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Đã xóa danh mục</> });
+                    setTimeout(() => setNotification(null), 3000);
+                },
+                onError: () => {
+                    setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> Không thể xóa danh mục (có thể do đang có sản phẩm)</> });
+                }
+            });
+        }
+    };
 
     const onSubmit = (data: CategoryFormValues) => {
         form.clearErrors();
@@ -110,9 +84,27 @@ export default function AdminCategoriesPage() {
         }
 
         if (editingCategory) {
-            updateMutation.mutate({ id: editingCategory.id, payload: parsed.data });
+            updateMutation.mutate({ id: editingCategory.id, data: parsed.data }, {
+                onSuccess: (data) => {
+                    handleCancelEdit();
+                    setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Đã cập nhật danh mục: {data.category?.name || parsed.data.name}</> });
+                    setTimeout(() => setNotification(null), 3000);
+                },
+                onError: (error: any) => {
+                    setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> Lỗi: {error.message}</> });
+                }
+            });
         } else {
-            createMutation.mutate(parsed.data);
+            createMutation.mutate(parsed.data, {
+                onSuccess: (data) => {
+                    handleCancelEdit();
+                    setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Đã tạo danh mục: {data.category?.name || parsed.data.name}</> });
+                    setTimeout(() => setNotification(null), 3000);
+                },
+                onError: (error: any) => {
+                    setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> Lỗi: {error.message}</> });
+                }
+            });
         }
     };
 
@@ -184,7 +176,7 @@ export default function AdminCategoriesPage() {
 
                             <div className="pt-2 flex flex-col gap-2">
                                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                                    {editingCategory ? "💾 Cập nhật" : "➕ Thêm mới"}
+                                    {editingCategory ? <><Save className="mr-1.5 inline-block h-4 w-4" /> Cập nhật</> : <><Plus className="mr-1.5 inline-block h-4 w-4" /> Thêm mới</>}
                                 </Button>
                                 {editingCategory && (
                                     <Button type="button" variant="outline" onClick={handleCancelEdit}>
@@ -245,11 +237,7 @@ export default function AdminCategoriesPage() {
                                                     <Button
                                                         size="sm"
                                                         variant="destructive"
-                                                        onClick={() => {
-                                                            if (window.confirm(`Xóa danh mục "${cat.name}"?`)) {
-                                                                deleteMutation.mutate(cat.id);
-                                                            }
-                                                        }}
+                                                        onClick={() => handleDelete(cat)}
                                                         disabled={deleteMutation.isPending}
                                                         className="text-xs h-8"
                                                     >

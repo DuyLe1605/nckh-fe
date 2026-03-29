@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import { getMyBids, type MyBidItem } from "@/lib/api/bids.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useMyBidsQuery } from "@/lib/query/hooks/use-bids";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Trophy, AlertTriangle, Undo, PartyPopper } from "lucide-react";
 
 function formatCurrency(value: string | number) {
     const num = Number(value);
@@ -32,10 +32,10 @@ function formatCountdown(targetIso: string, nowMs: number) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-    const map: Record<string, { label: string; className: string }> = {
-        WINNING: { label: "🏆 Dẫn đầu", className: "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-300" },
-        OUTBID: { label: "⚠️ Bị vượt", className: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300" },
-        RETRACTED: { label: "↩ Rút lại", className: "border-muted-foreground/40 bg-muted text-muted-foreground" },
+    const map: Record<string, { label: React.ReactNode; className: string }> = {
+        WINNING: { label: <><Trophy className="mr-1 inline-block h-3.5 w-3.5" /> Dẫn đầu</>, className: "border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-300" },
+        OUTBID: { label: <><AlertTriangle className="mr-1 inline-block h-3.5 w-3.5" /> Bị vượt</>, className: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300" },
+        RETRACTED: { label: <><Undo className="mr-1 inline-block h-3.5 w-3.5" /> Rút lại</>, className: "border-muted-foreground/40 bg-muted text-muted-foreground" },
     };
     const info = map[status] ?? { label: status, className: "" };
     return <Badge variant="outline" className={info.className}>{info.label}</Badge>;
@@ -49,12 +49,7 @@ export default function BidderDashboardPage() {
         return () => window.clearInterval(timer);
     }, []);
 
-    const myBidsQuery = useQuery({
-        queryKey: QUERY_KEYS.bids.myBids(),
-        queryFn: () => getMyBids({ pageSize: 50 }),
-        staleTime: 30_000,
-        refetchInterval: 30_000,
-    });
+    const myBidsQuery = useMyBidsQuery({ pageSize: 50 });
 
     const bids: MyBidItem[] = myBidsQuery.data?.bids ?? [];
 
@@ -207,7 +202,7 @@ export default function BidderDashboardPage() {
             {wonBids.length > 0 && (
                 <Card>
                     <CardHeader>
-                        <CardTitle>Đã chiến thắng 🎉</CardTitle>
+                        <CardTitle className="flex items-center gap-2"><PartyPopper className="h-5 w-5 text-green-600 dark:text-green-400" /> Đã chiến thắng</CardTitle>
                         <CardDescription>
                             Các phiên bạn đã thắng — kiểm tra đơn hàng trong mục Đơn hàng của tôi.
                         </CardDescription>
@@ -221,7 +216,7 @@ export default function BidderDashboardPage() {
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <p className="font-medium">{bid.product?.title ?? "N/A"}</p>
                                     <Badge className="border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-300">
-                                        🏆 Đã thắng
+                                        <Trophy className="mr-1.5 inline-block h-3.5 w-3.5" /> Đã thắng
                                     </Badge>
                                 </div>
                                 <p className="mt-2 text-xs text-muted-foreground">

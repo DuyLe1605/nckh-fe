@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getMyWallet, deposit, type WalletTransaction } from "@/lib/api/wallets.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { type WalletTransaction } from "@/lib/api/wallets.api";
+import { useMyWalletQuery, useDepositMutation } from "@/lib/query/hooks/use-wallet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, XCircle } from "lucide-react";
 
 function formatCurrency(value: string | number) {
     const num = Number(value);
@@ -43,36 +43,15 @@ function TxTypeBadge({ type }: { type: string }) {
     return <span className={`text-xs font-medium ${info.color}`}>{info.label}</span>;
 }
 
-type Notification = { type: "success" | "error"; text: string };
+type Notification = { type: "success" | "error"; text: React.ReactNode };
 
 export default function WalletPage() {
-    const queryClient = useQueryClient();
     const [amount, setAmount] = useState("");
     const [notification, setNotification] = useState<Notification | null>(null);
 
-    const walletQuery = useQuery({
-        queryKey: QUERY_KEYS.wallets.me,
-        queryFn: getMyWallet,
-        staleTime: 10_000,
-    });
+    const walletQuery = useMyWalletQuery();
 
-    const depositMutation = useMutation({
-        mutationFn: (depositAmount: number) =>
-            deposit({
-                amount: depositAmount,
-                idempotencyKey: `dep-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            }),
-        onSuccess: (data) => {
-            setNotification({ type: "success", text: `✅ Nạp thành công ${formatCurrency(data.transaction.amount)}` });
-            setAmount("");
-            void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.wallets.me });
-            setTimeout(() => setNotification(null), 4000);
-        },
-        onError: (error: { message?: string }) => {
-            setNotification({ type: "error", text: `❌ ${error?.message ?? "Nạp tiền thất bại"}` });
-            setTimeout(() => setNotification(null), 4000);
-        },
-    });
+    const depositMutation = useDepositMutation();
 
     const handleDeposit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -82,7 +61,17 @@ export default function WalletPage() {
             setTimeout(() => setNotification(null), 4000);
             return;
         }
-        depositMutation.mutate(num);
+        depositMutation.mutate(num, {
+            onSuccess: (data) => {
+                setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> Nạp thành công {formatCurrency(data.transaction.amount)}</> });
+                setAmount("");
+                setTimeout(() => setNotification(null), 4000);
+            },
+            onError: (error: any) => {
+                setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> {error?.message ?? "Nạp tiền thất bại"}</> });
+                setTimeout(() => setNotification(null), 4000);
+            }
+        });
     };
 
     const wallet = walletQuery.data?.wallet;

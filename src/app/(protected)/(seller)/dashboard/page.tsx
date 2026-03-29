@@ -1,9 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useOrdersQuery } from "@/lib/query/hooks/use-orders";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
-import { listOrders, type OrderItem } from "@/lib/api/orders.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -12,10 +10,9 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip,
     ResponsiveContainer,
-    Legend
 } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import Link from "next/link";
 import { WalletCards, Package, CheckCircle2 } from "lucide-react";
 
@@ -32,10 +29,7 @@ function formatCurrency(value: string | number) {
 export default function SellerDashboardPage() {
     const currentUserId = useAuthUiStore(s => s.currentUserId);
 
-    const ordersQuery = useQuery({
-        queryKey: QUERY_KEYS.orders.list({}),
-        queryFn: () => listOrders({}),
-    });
+    const ordersQuery = useOrdersQuery("");
 
     const orders = ordersQuery.data?.orders ?? [];
     
@@ -67,6 +61,11 @@ export default function SellerDashboardPage() {
     });
 
     const chartData = Object.values(monthlyDataMap);
+
+    const chartConfig = {
+        revenue: { label: "Thực nhận", color: "hsl(var(--primary))" },
+        platformFee: { label: "Phí nền tảng", color: "hsl(var(--destructive))" },
+    };
 
     return (
         <section className="space-y-6">
@@ -131,22 +130,18 @@ export default function SellerDashboardPage() {
                             <Skeleton className="h-full w-full rounded-xl" />
                         </div>
                     ) : (
-                        <div className="h-[350px] w-full mt-4">
-                            <ResponsiveContainer width="100%" height="100%">
+                        <div className="mt-4">
+                            <ChartContainer config={chartConfig} className="h-[350px] w-full">
                                 <BarChart data={chartData} margin={{ top: 10, right: 10, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted-foreground)/0.2)" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                     <XAxis dataKey="month" tickLine={false} axisLine={false} tickFormatter={(val) => val} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
                                     <YAxis tickFormatter={(val) => `${val / 1000}k`} axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                                    <Tooltip
-                                        cursor={{ fill: "hsl(var(--muted)/0.4)" }}
-                                        contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))", backgroundColor: "hsl(var(--background))", color: "hsl(var(--foreground))" }}
-                                        formatter={(value: any) => [formatCurrency(value), ""]}
-                                    />
-                                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                                    <Bar dataKey="revenue" name="Thực nhận" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="platformFee" name="Phí nền tảng" fill="hsl(var(--destructive)/0.8)" radius={[4, 4, 0, 0]} />
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                                    <ChartLegend content={<ChartLegendContent />} />
+                                    <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="platformFee" fill="var(--color-platformFee)" radius={[4, 4, 0, 0]} />
                                 </BarChart>
-                            </ResponsiveContainer>
+                            </ChartContainer>
                         </div>
                     )}
                 </CardContent>

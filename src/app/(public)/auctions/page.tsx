@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-
-import { listAuctions } from "@/lib/api/auctions.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useAuctionsQuery } from "@/lib/query/hooks/use-auctions";
 import { useAuctionsUiStore, type AuctionFilterStatus } from "@/stores/auctions-ui.store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,10 +45,7 @@ export default function AuctionsListPage() {
         [page, pageSize, search, status],
     );
 
-    const auctionsQuery = useQuery({
-        queryKey: QUERY_KEYS.auctions.list(queryParams),
-        queryFn: () => listAuctions(queryParams),
-    });
+    const auctionsQuery = useAuctionsQuery(queryParams);
 
     const auctions = auctionsQuery.data?.products ?? [];
     const pagination = auctionsQuery.data?.pagination;

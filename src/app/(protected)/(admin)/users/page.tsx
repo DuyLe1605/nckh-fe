@@ -1,20 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-    listUsers,
-    updateUserStatus,
     type AdminUserItem,
     type UserRole,
     type UserStatus,
 } from "@/lib/api/admin.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useAdminUsersQuery, useUpdateUserStatusMutation } from "@/lib/query/hooks/use-users";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, Pause, Ban, XCircle } from "lucide-react";
 
 function formatCurrency(value: string | number) {
     const num = Number(value);
@@ -84,7 +82,7 @@ function UserStatusBadge({ status }: { status: string }) {
     return <Badge variant="outline" className={cfg.className}>{cfg.label}</Badge>;
 }
 
-type Notification = { type: "success" | "error"; text: string };
+type Notification = { type: "success" | "error"; text: React.ReactNode };
 
 const ROLE_FILTERS: { value: UserRole | ""; label: string }[] = [
     { value: "", label: "Tất cả vai trò" },
@@ -102,7 +100,6 @@ const STATUS_FILTERS: { value: UserStatus | ""; label: string }[] = [
 ];
 
 export default function AdminUsersPage() {
-    const queryClient = useQueryClient();
     const [notification, setNotification] = useState<Notification | null>(null);
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -127,31 +124,14 @@ export default function AdminUsersPage() {
         return params;
     }, [page, debouncedSearch, roleFilter, statusFilter]);
 
-    const usersQuery = useQuery({
-        queryKey: QUERY_KEYS.admin.users(buildParams()),
-        queryFn: () =>
-            listUsers({
-                page,
-                search: debouncedSearch || undefined,
-                role: roleFilter || undefined,
-                status: statusFilter || undefined,
-            }),
-        staleTime: 10_000,
+    const usersQuery = useAdminUsersQuery({
+        page,
+        search: debouncedSearch || undefined,
+        role: roleFilter || undefined,
+        status: statusFilter || undefined,
     });
 
-    const updateStatusMutation = useMutation({
-        mutationFn: ({ id, status }: { id: string; status: UserStatus }) =>
-            updateUserStatus(id, status),
-        onSuccess: (data) => {
-            setNotification({ type: "success", text: `✅ ${data.message}` });
-            void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-            setTimeout(() => setNotification(null), 4000);
-        },
-        onError: (error: { message?: string }) => {
-            setNotification({ type: "error", text: `❌ ${error?.message ?? "Cập nhật thất bại"}` });
-            setTimeout(() => setNotification(null), 4000);
-        },
-    });
+    const updateStatusMutation = useUpdateUserStatusMutation();
 
     const users: AdminUserItem[] = usersQuery.data?.users ?? [];
     const pagination = usersQuery.data?.pagination;
@@ -167,7 +147,16 @@ export default function AdminUsersPage() {
                     : newStatus;
 
         if (window.confirm(`Bạn có chắc muốn ${action} tài khoản "${userName}"?`)) {
-            updateStatusMutation.mutate({ id: userId, status: newStatus });
+            updateStatusMutation.mutate({ id: userId, status: newStatus }, {
+                onSuccess: (data) => {
+                    setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> {data.message}</> });
+                    setTimeout(() => setNotification(null), 4000);
+                },
+                onError: (error: any) => {
+                    setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> {error?.message ?? "Cập nhật thất bại"}</> });
+                    setTimeout(() => setNotification(null), 4000);
+                }
+            });
         }
     };
 
@@ -333,7 +322,7 @@ export default function AdminUsersPage() {
                                                 disabled={updateStatusMutation.isPending}
                                                 className="text-xs"
                                             >
-                                                ⏸️ Tạm dừng
+                                                <Pause className="mr-1.5 inline-block h-3.5 w-3.5" /> Tạm dừng
                                             </Button>
                                             <Button
                                                 size="sm"
@@ -344,7 +333,7 @@ export default function AdminUsersPage() {
                                                 disabled={updateStatusMutation.isPending}
                                                 className="text-xs"
                                             >
-                                                🚫 Cấm
+                                                <Ban className="mr-1.5 inline-block h-3.5 w-3.5" /> Cấm
                                             </Button>
                                         </>
                                     )}
@@ -358,7 +347,7 @@ export default function AdminUsersPage() {
                                             disabled={updateStatusMutation.isPending}
                                             className="text-xs"
                                         >
-                                            ✅ Kích hoạt lại
+                                            <CheckCircle className="mr-1.5 inline-block h-3.5 w-3.5" /> Kích hoạt lại
                                         </Button>
                                     )}
                                     {user.status === "UNVERIFIED" && (
@@ -371,7 +360,7 @@ export default function AdminUsersPage() {
                                             disabled={updateStatusMutation.isPending}
                                             className="text-xs"
                                         >
-                                            ✅ Xác minh & Kích hoạt
+                                            <CheckCircle className="mr-1.5 inline-block h-3.5 w-3.5" /> Xác minh & Kích hoạt
                                         </Button>
                                     )}
                                 </div>

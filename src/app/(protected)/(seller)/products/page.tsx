@@ -2,19 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-    listMyProducts,
-    deleteProduct,
     type ProductItem,
     type ProductStatus,
 } from "@/lib/api/products.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useMyProductsQuery, useDeleteProductMutation } from "@/lib/query/hooks/use-products";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, XCircle, Pencil, Trash2, Eye } from "lucide-react";
 
 function formatCurrency(value: string | number) {
     const num = Number(value);
@@ -68,7 +66,7 @@ function ProductStatusBadge({ status }: { status: string }) {
     return <Badge variant="outline" className={cfg.className}>{cfg.label}</Badge>;
 }
 
-type Notification = { type: "success" | "error"; text: string };
+type Notification = { type: "success" | "error"; text: React.ReactNode };
 
 const STATUS_FILTERS: { value: ProductStatus | ""; label: string }[] = [
     { value: "", label: "Tất cả" },
@@ -81,33 +79,13 @@ const STATUS_FILTERS: { value: ProductStatus | ""; label: string }[] = [
 ];
 
 export default function SellerProductsPage() {
-    const queryClient = useQueryClient();
     const currentUserId = useAuthUiStore((s) => s.currentUserId);
     const [notification, setNotification] = useState<Notification | null>(null);
     const [statusFilter, setStatusFilter] = useState<ProductStatus | "">("");
 
-    const productsQuery = useQuery({
-        queryKey: QUERY_KEYS.products.myList(
-            statusFilter ? { status: statusFilter } : undefined,
-        ),
-        queryFn: () =>
-            listMyProducts(currentUserId ?? "", statusFilter ? { status: statusFilter } : {}),
-        enabled: !!currentUserId,
-        staleTime: 15_000,
-    });
+    const productsQuery = useMyProductsQuery(currentUserId ?? "", statusFilter ? { status: statusFilter } : {});
 
-    const deleteMutation = useMutation({
-        mutationFn: (id: string) => deleteProduct(id),
-        onSuccess: (data) => {
-            setNotification({ type: "success", text: `✅ ${data.message}` });
-            void queryClient.invalidateQueries({ queryKey: ["products"] });
-            setTimeout(() => setNotification(null), 4000);
-        },
-        onError: (error: { message?: string }) => {
-            setNotification({ type: "error", text: `❌ ${error?.message ?? "Xóa thất bại"}` });
-            setTimeout(() => setNotification(null), 4000);
-        },
-    });
+    const deleteMutation = useDeleteProductMutation();
 
     const products: ProductItem[] = productsQuery.data?.products ?? [];
     const pagination = productsQuery.data?.pagination;
@@ -225,7 +203,7 @@ export default function SellerProductsPage() {
                                     {product.status !== "ACTIVE" && product.status !== "SOLD" && (
                                         <Link href={`/products/edit/${product.id}`}>
                                             <Button size="sm" variant="outline" className="text-xs">
-                                                ✏️ Chỉnh sửa
+                                                <Pencil className="mr-1.5 inline-block h-3.5 w-3.5" /> Chỉnh sửa
                                             </Button>
                                         </Link>
                                     )}
@@ -235,18 +213,27 @@ export default function SellerProductsPage() {
                                             variant="destructive"
                                             onClick={() => {
                                                 if (window.confirm(`Xóa sản phẩm "${product.title}"?`)) {
-                                                    deleteMutation.mutate(product.id);
+                                                    deleteMutation.mutate(product.id, {
+                                                        onSuccess: (data) => {
+                                                            setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> {data.message}</> });
+                                                            setTimeout(() => setNotification(null), 4000);
+                                                        },
+                                                        onError: (error: any) => {
+                                                            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> {error?.message ?? "Xóa thất bại"}</> });
+                                                            setTimeout(() => setNotification(null), 4000);
+                                                        }
+                                                    });
                                                 }
                                             }}
                                             disabled={deleteMutation.isPending}
                                             className="text-xs"
                                         >
-                                            🗑️ Xóa
+                                            <Trash2 className="mr-1.5 inline-block h-3.5 w-3.5" /> Xóa
                                         </Button>
                                     )}
                                     <Link href={`/auctions/${product.id}`}>
                                         <Button size="sm" variant="ghost" className="text-xs">
-                                            👁️ Xem chi tiết
+                                            <Eye className="mr-1.5 inline-block h-3.5 w-3.5" /> Xem chi tiết
                                         </Button>
                                     </Link>
                                 </div>

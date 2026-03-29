@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useAuctionsQuery } from "@/lib/query/hooks/use-auctions";
 import { ROUTE_CONSTANTS } from "@/constants/app.constants";
-import { listAuctions, type AuctionItem } from "@/lib/api/auctions.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { type AuctionItem } from "@/lib/api/auctions.api";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ArrowRight, ChevronRight, Zap, ShieldCheck, Flame, Clock } from "lucide-react";
 
@@ -21,10 +20,7 @@ function formatCurrency(value: string | number) {
 
 export default function HomePage() {
     // Fetch top 4 ACTIVE auctions
-    const featuredAuctionsQuery = useQuery({
-        queryKey: QUERY_KEYS.auctions.list({ status: "ACTIVE", pageSize: 4 }),
-        queryFn: () => listAuctions({ status: "ACTIVE", pageSize: 4, sortBy: "endTime", sortOrder: "asc" }),
-    });
+    const featuredAuctionsQuery = useAuctionsQuery({ status: "ACTIVE", pageSize: 4, sortBy: "endTime", sortOrder: "asc" });
 
     const featuredAuctions = featuredAuctionsQuery.data?.products ?? [];
 

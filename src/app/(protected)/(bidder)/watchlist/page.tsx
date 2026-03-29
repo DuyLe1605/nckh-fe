@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getWatchlist, removeFromWatchlist } from "@/lib/api/watchlists.api";
+import { useWatchlistQuery, useRemoveFromWatchlistMutation } from "@/lib/query/hooks/use-watchlist";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -21,23 +20,9 @@ function formatCurrency(value: string | number) {
 }
 
 export default function WatchlistPage() {
-    const queryClient = useQueryClient();
+    const query = useWatchlistQuery();
 
-    const query = useQuery({
-        queryKey: ["watchlist"],
-        queryFn: () => getWatchlist(1, 50),
-    });
-
-    const removeMutation = useMutation({
-        mutationFn: removeFromWatchlist,
-        onSuccess: () => {
-            toast.success("Đã xoá khỏi danh sách theo dõi");
-            queryClient.invalidateQueries({ queryKey: ["watchlist"] });
-        },
-        onError: () => {
-            toast.error("Có lỗi xảy ra khi xoá");
-        }
-    });
+    const removeMutation = useRemoveFromWatchlistMutation();
 
     const items = query.data?.items ?? [];
 

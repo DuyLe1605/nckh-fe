@@ -1,25 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { logoutAllDevices, me } from "@/lib/api/auth.api";
+import { useProfileQuery, useLogoutAllMutation } from "@/lib/query/hooks/use-profile";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
-import { clearAccessToken } from "@/lib/auth/session-manager";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 
 export default function ProfilePage() {
-    const router = useRouter();
-    const { currentEmail, currentRole, currentFullName, isAuthenticated, setSession, clearSession } = useAuthUiStore();
+    const { currentEmail, currentRole, currentFullName, isAuthenticated, setSession } = useAuthUiStore();
 
-    const profileQuery = useQuery({
-        queryKey: QUERY_KEYS.auth.profile,
-        queryFn: me,
-        retry: 1,
-    });
+    const profileQuery = useProfileQuery();
 
     useEffect(() => {
         const user = profileQuery.data?.user;
@@ -33,15 +23,7 @@ export default function ProfilePage() {
         });
     }, [profileQuery.data?.user, setSession]);
 
-    const logoutAllMutation = useMutation({
-        mutationFn: logoutAllDevices,
-        onSettled: () => {
-            document.cookie = `${APP_CONSTANTS.COOKIE_ROLE_KEY}=; path=/; max-age=0`;
-            clearAccessToken();
-            clearSession();
-            router.push(ROUTE_CONSTANTS.LOGIN);
-        },
-    });
+    const logoutAllMutation = useLogoutAllMutation();
 
     const email = profileQuery.data?.user?.email ?? currentEmail;
     const role = profileQuery.data?.user?.role ?? currentRole;

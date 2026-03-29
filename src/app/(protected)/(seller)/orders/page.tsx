@@ -1,18 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-    listOrders,
-    updateOrderStatus,
     type OrderItem,
     type OrderStatus,
 } from "@/lib/api/orders.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useOrdersQuery, useUpdateOrderMutation } from "@/lib/query/hooks/use-orders";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle, XCircle, Package, AlertTriangle } from "lucide-react";
 
 function formatCurrency(value: string | number) {
     const num = Number(value);
@@ -62,35 +60,15 @@ function OrderStatusBadge({ status }: { status: string }) {
     return <Badge variant="outline" className={cfg.className}>{cfg.label}</Badge>;
 }
 
-type Notification = { type: "success" | "error"; text: string };
+type Notification = { type: "success" | "error"; text: React.ReactNode };
 
 export default function SellerOrdersPage() {
-    const queryClient = useQueryClient();
     const [notification, setNotification] = useState<Notification | null>(null);
     const [statusFilter, setStatusFilter] = useState<OrderStatus | "">("");
 
-    const ordersQuery = useQuery({
-        queryKey: QUERY_KEYS.orders.list(
-            statusFilter ? { status: statusFilter } : undefined,
-        ),
-        queryFn: () =>
-            listOrders(statusFilter ? { status: statusFilter as OrderStatus } : {}),
-        staleTime: 15_000,
-    });
+    const ordersQuery = useOrdersQuery(statusFilter);
 
-    const updateStatusMutation = useMutation({
-        mutationFn: ({ id, status }: { id: string; status: OrderStatus }) =>
-            updateOrderStatus(id, status),
-        onSuccess: (data) => {
-            setNotification({ type: "success", text: `✅ ${data.message}` });
-            void queryClient.invalidateQueries({ queryKey: ["orders"] });
-            setTimeout(() => setNotification(null), 4000);
-        },
-        onError: (error: { message?: string }) => {
-            setNotification({ type: "error", text: `❌ ${error?.message ?? "Cập nhật thất bại"}` });
-            setTimeout(() => setNotification(null), 4000);
-        },
-    });
+    const updateStatusMutation = useUpdateOrderMutation();
 
     const orders: OrderItem[] = ordersQuery.data?.orders ?? [];
     const pagination = ordersQuery.data?.pagination;
@@ -244,15 +222,27 @@ export default function SellerOrdersPage() {
                                             size="sm"
                                             variant="outline"
                                             onClick={() =>
-                                                updateStatusMutation.mutate({
-                                                    id: order.id,
-                                                    status: "SHIPPED",
-                                                })
+                                                updateStatusMutation.mutate(
+                                                    {
+                                                        id: order.id,
+                                                        status: "SHIPPED",
+                                                    },
+                                                    {
+                                                        onSuccess: (data) => {
+                                                            setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> {data.message}</> });
+                                                            setTimeout(() => setNotification(null), 4000);
+                                                        },
+                                                        onError: (error: any) => {
+                                                            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> {error?.message ?? "Cập nhật thất bại"}</> });
+                                                            setTimeout(() => setNotification(null), 4000);
+                                                        }
+                                                    }
+                                                )
                                             }
                                             disabled={updateStatusMutation.isPending}
                                             className="text-xs"
                                         >
-                                            📦 Đánh dấu đã giao
+                                            <Package className="mr-1.5 inline-block h-3.5 w-3.5" /> Đánh dấu đã giao
                                         </Button>
                                     )}
                                     {order.status === "PAYMENT_SECURED" && (
@@ -260,15 +250,27 @@ export default function SellerOrdersPage() {
                                             size="sm"
                                             variant="destructive"
                                             onClick={() =>
-                                                updateStatusMutation.mutate({
-                                                    id: order.id,
-                                                    status: "DISPUTED",
-                                                })
+                                                updateStatusMutation.mutate(
+                                                    {
+                                                        id: order.id,
+                                                        status: "DISPUTED",
+                                                    },
+                                                    {
+                                                        onSuccess: (data) => {
+                                                            setNotification({ type: "success", text: <><CheckCircle className="mr-1 inline-block h-4 w-4" /> {data.message}</> });
+                                                            setTimeout(() => setNotification(null), 4000);
+                                                        },
+                                                        onError: (error: any) => {
+                                                            setNotification({ type: "error", text: <><XCircle className="mr-1 inline-block h-4 w-4" /> {error?.message ?? "Cập nhật thất bại"}</> });
+                                                            setTimeout(() => setNotification(null), 4000);
+                                                        }
+                                                    }
+                                                )
                                             }
                                             disabled={updateStatusMutation.isPending}
                                             className="text-xs"
                                         >
-                                            ⚠️ Báo tranh chấp
+                                            <AlertTriangle className="mr-1.5 inline-block h-3.5 w-3.5" /> Báo tranh chấp
                                         </Button>
                                     )}
                                 </div>

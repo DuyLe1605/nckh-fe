@@ -1,8 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { getAdminDashboardAnalytics } from "@/lib/api/admin.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useAdminDashboardQuery } from "@/lib/query/hooks/use-dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -46,11 +44,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function AdminDashboardPage() {
-    const { data: response, isLoading, isError } = useQuery({
-        queryKey: QUERY_KEYS.admin.dashboard,
-        queryFn: getAdminDashboardAnalytics,
-        staleTime: 30000,
-    });
+    const { data: response, isLoading, isError } = useAdminDashboardQuery();
 
     const data = response?.data;
 

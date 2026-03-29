@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { use } from "react";
-import { useQuery } from "@tanstack/react-query";
-
-import { getAuctionDetail } from "@/lib/api/auctions.api";
-import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useAuctionDetailQuery } from "@/lib/query/hooks/use-auctions";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,11 +31,7 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
     const { id } = use(params);
     const currentUserId = useAuthUiStore((s) => s.currentUserId);
 
-    const auctionsDetailQuery = useQuery({
-        queryKey: QUERY_KEYS.auctions.detail(id),
-        queryFn: () => getAuctionDetail(id),
-        staleTime: 60_000,
-    });
+    const auctionsDetailQuery = useAuctionDetailQuery(id);
 
     const auction = auctionsDetailQuery.data?.product;
 
