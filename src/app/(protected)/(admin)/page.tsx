@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { useAdminDashboardQuery } from "@/lib/query/hooks/use-dashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,7 +12,7 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 function formatCurrency(value: string | number) {
     const num = Number(value);
@@ -47,13 +48,14 @@ export default function AdminDashboardPage() {
     const { data: response, isLoading, isError } = useAdminDashboardQuery();
 
     const data = response?.data;
+    const monthlyRevenue = data?.monthlyRevenue || [];
 
-    // Map recent orders to chart data
-    const chartData = (data?.recentOrders || []).map((order) => ({
-        name: order.product.title.length > 20 ? order.product.title.substring(0, 20) + "..." : order.product.title,
-        revenue: Number(order.platformFee),
-        finalPrice: Number(order.finalPrice),
-    })).reverse(); // Reverse so oldest is first from the last 5
+    const [activeChart, setActiveChart] = useState<keyof typeof chartConfig>("revenue");
+
+    const totals = useMemo(() => ({
+        revenue: monthlyRevenue.reduce((acc, curr) => acc + curr.revenue, 0),
+        finalPrice: monthlyRevenue.reduce((acc, curr) => acc + curr.finalPrice, 0),
+    }), [monthlyRevenue]);
 
     return (
         <section className="space-y-6">
@@ -131,40 +133,74 @@ export default function AdminDashboardPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* ─── Revenue Chart ─── */}
-                <Card className="flex flex-col">
-                    <CardHeader>
-                        <CardTitle>Doanh thu từ các đơn gần đây</CardTitle>
-                        <CardDescription>Biểu đồ thể hiện phí nền tảng thu được</CardDescription>
+                <Card className="flex flex-col py-0 sm:py-0">
+                    <CardHeader className="flex flex-col items-stretch border-b p-0 sm:flex-row">
+                        <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:py-0">
+                            <CardTitle>Biểu đồ Doanh thu (Interactive)</CardTitle>
+                            <CardDescription>
+                                Dữ liệu 6 tháng gần nhất từ đơn hàng thành công
+                            </CardDescription>
+                        </div>
+                        <div className="flex">
+                            {(Object.keys(chartConfig) as Array<keyof typeof chartConfig>).map((key) => {
+                                const chart = chartConfig[key];
+                                return (
+                                    <button
+                                        key={key}
+                                        data-active={activeChart === key}
+                                        className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                                        onClick={() => setActiveChart(key)}
+                                    >
+                                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                            {chart.label}
+                                        </span>
+                                        <span className="text-lg leading-none font-bold sm:text-2xl whitespace-nowrap">
+                                            {totals[key] ? formatCurrency(totals[key]) : "0 đ"}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </CardHeader>
-                    <CardContent className="flex-1">
+                    <CardContent className="px-2 sm:p-6 flex-1">
                         {isLoading ? (
-                            <Skeleton className="h-[300px] w-full" />
-                        ) : chartData.length > 0 ? (
-                            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                                    <BarChart data={chartData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-                                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                                        <XAxis
-                                            dataKey="name"
-                                            tickLine={false}
-                                            tickMargin={10}
-                                            axisLine={false}
-                                        />
-                                        <YAxis
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickFormatter={(value) => `${value.toLocaleString()}đ`}
-                                            width={80}
-                                        />
-                                        <ChartTooltip
-                                            cursor={false}
-                                            content={<ChartTooltipContent indicator="dashed" />}
-                                        />
-                                        <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-                                    </BarChart>
+                            <Skeleton className="h-[250px] w-full" />
+                        ) : monthlyRevenue.length > 0 ? (
+                            <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+                                <LineChart
+                                    accessibilityLayer
+                                    data={monthlyRevenue}
+                                    margin={{ left: 12, right: 12, top: 12 }}
+                                >
+                                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                                    <XAxis
+                                        dataKey="month"
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickMargin={8}
+                                        minTickGap={32}
+                                    />
+                                    <YAxis
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(value) => `${(value / 1000000).toFixed(0)}tr`}
+                                        width={50}
+                                    />
+                                    <ChartTooltip
+                                        content={<ChartTooltipContent className="w-[150px]" />}
+                                    />
+                                    <Line
+                                        dataKey={activeChart}
+                                        type="monotone"
+                                        stroke={`var(--color-${activeChart})`}
+                                        strokeWidth={2}
+                                        dot={false}
+                                    />
+                                </LineChart>
                             </ChartContainer>
                         ) : (
-                            <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground border border-dashed rounded-md">
-                                Chưa có đơn hàng nào
+                            <div className="flex h-[250px] items-center justify-center text-sm text-muted-foreground border border-dashed rounded-md">
+                                Chưa có dòng tiền nào trong 6 tháng qua
                             </div>
                         )}
                     </CardContent>

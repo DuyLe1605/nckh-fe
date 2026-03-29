@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { useOrdersQuery } from "@/lib/query/hooks/use-orders";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,9 +64,16 @@ export default function SellerDashboardPage() {
     const chartData = Object.values(monthlyDataMap);
 
     const chartConfig = {
-        revenue: { label: "Thực nhận", color: "hsl(var(--primary))" },
-        platformFee: { label: "Phí nền tảng", color: "hsl(var(--destructive))" },
+        revenue: { label: "Thực nhận", color: "hsl(var(--chart-1))" },
+        platformFee: { label: "Phí nền tảng", color: "hsl(var(--chart-2))" },
     };
+
+    const [activeChart, setActiveChart] = useState<keyof typeof chartConfig>("revenue");
+
+    const totals = useMemo(() => ({
+        revenue: chartData.reduce((acc, curr) => acc + curr.revenue, 0),
+        platformFee: chartData.reduce((acc, curr) => acc + curr.platformFee, 0),
+    }), [chartData]);
 
     return (
         <section className="space-y-6">
@@ -119,30 +127,69 @@ export default function SellerDashboardPage() {
                 </Card>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Biểu đồ Doanh thu (6 tháng gần nhất)</CardTitle>
-                    <CardDescription>Dữ liệu chỉ tính các đơn hàng ở trạng thái COMPLETED</CardDescription>
+            <Card className="flex flex-col py-0 sm:py-0">
+                <CardHeader className="flex flex-col items-stretch border-b p-0 sm:flex-row">
+                    <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:py-0">
+                        <CardTitle>Biểu đồ Doanh thu (Interactive)</CardTitle>
+                        <CardDescription>
+                            Dữ liệu chỉ tính các đơn hàng ở trạng thái COMPLETED
+                        </CardDescription>
+                    </div>
+                    <div className="flex">
+                        {(Object.keys(chartConfig) as Array<keyof typeof chartConfig>).map((key) => {
+                            const chart = chartConfig[key];
+                            return (
+                                <button
+                                    key={key}
+                                    data-active={activeChart === key}
+                                    className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                                    onClick={() => setActiveChart(key)}
+                                >
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                        {chart.label}
+                                    </span>
+                                    <span className="text-lg leading-none font-bold sm:text-2xl whitespace-nowrap">
+                                        {totals[key] ? formatCurrency(totals[key]) : "0 đ"}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-2 sm:p-6 flex-1">
                     {ordersQuery.isLoading ? (
-                        <div className="flex h-[350px] items-center justify-center">
+                        <div className="flex h-[300px] items-center justify-center">
                             <Skeleton className="h-full w-full rounded-xl" />
                         </div>
                     ) : (
-                        <div className="mt-4">
-                            <ChartContainer config={chartConfig} className="h-[350px] w-full">
-                                <BarChart data={chartData} margin={{ top: 10, right: 10, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickFormatter={(val) => val} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                                    <YAxis tickFormatter={(val) => `${val / 1000}k`} axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
-                                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                                    <ChartLegend content={<ChartLegendContent />} />
-                                    <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
-                                    <Bar dataKey="platformFee" fill="var(--color-platformFee)" radius={[4, 4, 0, 0]} />
-                                </BarChart>
-                            </ChartContainer>
-                        </div>
+                        <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
+                            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis
+                                    dataKey="month"
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(val) => val}
+                                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                                />
+                                <YAxis
+                                    tickFormatter={(val) => `${(val / 1000).toLocaleString()}k`}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                                    width={60}
+                                />
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={<ChartTooltipContent className="w-[150px]" />}
+                                />
+                                <Bar
+                                    dataKey={activeChart}
+                                    fill={`var(--color-${activeChart})`}
+                                    radius={[4, 4, 0, 0]}
+                                />
+                            </BarChart>
+                        </ChartContainer>
                     )}
                 </CardContent>
             </Card>

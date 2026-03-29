@@ -77,6 +77,7 @@ export type DashboardAnalyticsResponse = {
         totalBids: number;
         totalRevenue: number;
         recentOrders: DashboardRecentOrder[];
+        monthlyRevenue: { month: string; revenue: number; finalPrice: number }[];
     };
 };
 
