@@ -11,6 +11,7 @@ import {
 import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ReviewDialog } from "@/components/auction/ReviewDialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -270,6 +271,12 @@ export default function BidderOrdersPage() {
                                         >
                                             ⚠️ Báo tranh chấp
                                         </Button>
+                                    )}
+                                    {order.status === "COMPLETED" && (
+                                        <ReviewDialog 
+                                            orderId={order.id} 
+                                            sellerName={order.seller?.fullName ?? "Người bán"} 
+                                        />
                                     )}
                                 </div>
                             </div>

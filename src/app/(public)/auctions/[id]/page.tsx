@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LiveBidPanel } from "@/components/auction/LiveBidPanel";
 import { ReportDialog } from "@/components/auction/ReportDialog";
+import { WatchlistButton } from "@/components/auction/WatchlistButton";
 import { ROUTE_CONSTANTS, APP_CONSTANTS } from "@/constants/app.constants";
 
 type AuctionDetailPageProps = {
@@ -86,10 +87,16 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
                                 <div className="flex items-center gap-2">
                                     <Badge variant="outline">{auction.status}</Badge>
                                     {currentUserId && auction.seller?.id !== currentUserId && (
-                                        <ReportDialog
-                                            reportedUserId={auction.seller?.id ?? ""}
-                                            productId={auction.id}
-                                        />
+                                        <>
+                                            <WatchlistButton 
+                                                productId={auction.id} 
+                                                currentUserId={currentUserId} 
+                                            />
+                                            <ReportDialog
+                                                reportedUserId={auction.seller?.id ?? ""}
+                                                productId={auction.id}
+                                            />
+                                        </>
                                     )}
                                 </div>
                             </div>

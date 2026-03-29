@@ -4,8 +4,8 @@ import { APP_CONSTANTS } from "@/constants/app.constants";
 const BE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(APP_CONSTANTS.API_PREFIX, "") ?? APP_CONSTANTS.DEFAULT_BE_ORIGIN;
 const TARGET_API_URL = `${BE_URL}${APP_CONSTANTS.API_PREFIX}`;
 
-async function handleProxy(req: NextRequest, { params }: { params: { path: string[] } }) {
-    const path = params.path.join("/");
+async function handleProxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+    const path = (await params).path.join("/");
     const url = new URL(`${TARGET_API_URL}/${path}${req.nextUrl.search}`);
 
     const role = req.cookies.get(APP_CONSTANTS.COOKIE_ROLE_KEY)?.value;
