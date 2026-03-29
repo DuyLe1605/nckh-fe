@@ -103,7 +103,7 @@ export function PublicFooter() {
                     <p>
                         &copy; {new Date().getFullYear()} {APP_CONSTANTS.APP_TITLE}. All rights reserved.
                     </p>
-                    <p className="font-medium text-foreground">Trusted platform for secure real-time auctions.</p>
+                    <p className="font-medium text-foreground">Đội Ngũ NCKH DH13C1</p>
                 </div>
             </div>
         </footer>

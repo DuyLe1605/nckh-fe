@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { APP_CONSTANTS } from "@/constants/app.constants";
 
-const BE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(APP_CONSTANTS.API_PREFIX, "") ?? APP_CONSTANTS.DEFAULT_BE_ORIGIN;
+const BE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_URL?.replace(APP_CONSTANTS.API_PREFIX, "") ?? APP_CONSTANTS.DEFAULT_BE_ORIGIN;
 const TARGET_API_URL = `${BE_URL}${APP_CONSTANTS.API_PREFIX}`;
 
 async function handleProxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {

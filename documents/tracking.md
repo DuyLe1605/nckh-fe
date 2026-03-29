@@ -120,6 +120,7 @@
 
 ### ✅ Hoàn thành gần đây
 
+- [x] Cập nhật footer public/protected với chữ ký cuối: **Đội Ngũ NCKH DH13C1**
 - [x] Auth flow: popup OTP sau đăng ký + cho phép xác thực sau
 - [x] Login toast cảnh báo cho user chưa verify
 - [x] Forgot Password page redesign (2 bước email/OTP)

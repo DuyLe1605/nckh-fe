@@ -25,7 +25,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             </header>
             <div className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">{children}</div>
             <footer className="border-t border-border/80 bg-background/30 py-4 text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} {APP_CONSTANTS.APP_TITLE}. Built for secure real-time commerce.
+                © {new Date().getFullYear()} {APP_CONSTANTS.APP_TITLE}. Đội Ngũ NCKH DH13C1.
             </footer>
         </main>
     );
