@@ -64,8 +64,8 @@
 
 | Task ID | Task | Status | Priority | Notes |
 |---------|------|--------|----------|-------|
-| BD-001 | Bidder dashboard (winning/outbid tabs) | [~] Đang làm | **P0** | Chuyển mock → real API |
-| BD-002 | Wallet page (balance + deposit) | [~] Đang làm | **P0** | Chuyển skeleton → real API |
+| BD-001 | Bidder dashboard (winning/outbid tabs) | ✅ Done | — | Real API via GET /bids/me |
+| BD-002 | Wallet page (balance + deposit) | ✅ Done | — | Real API via GET /wallets/me + POST deposit |
 | BD-003 | Order history (buyer view) | [ ] Todo | P1 | After order API ready |
 | BD-004 | Watchlist | [ ] Todo | P2 | Save favorite auctions |
 
@@ -76,7 +76,7 @@
 | SL-001 | Seller create product form | 🔄 Mock ~40% | P1 | Form UI exists, no API |
 | SL-002 | Seller edit product form | 🔄 Mock ~30% | P1 | Needs API integration |
 | SL-003 | Seller "my products" list | 🔄 Mock ~20% | P1 | Needs sellerId filter API |
-| SL-004 | Seller orders management | [~] Đang làm | **P0** | Chuyển mock → real API |
+| SL-004 | Seller orders management | ✅ Done | — | Real API via GET /orders + PATCH status |
 | SL-005 | Seller revenue overview | [ ] Todo | P2 | After order system |
 
 ## Epic 7 — Admin Console
@@ -105,9 +105,7 @@
 
 ### 🔥 Đang làm (In Progress)
 
-- [~] **BD-001** Bidder dashboard kết nối API thật (thay mock)
-- [~] **BD-002** Wallet page kết nối API thật (thay skeleton)
-- [~] **SL-004** Seller orders kết nối API thật (thay mock)
+- (trống — Phase 3 hoàn thành)
 
 ### 📋 Tiếp theo (Next up)
 
@@ -128,3 +126,7 @@
 - [x] Bid history query (public, no auth required)
 - [x] SUPER_ADMIN role type support
 - [x] effectiveEndTime WS update working
+- [x] Bidder Dashboard real API (Phase 3)
+- [x] Wallet page real API + deposit (Phase 3)
+- [x] Seller Orders real API + status actions (Phase 3)
+- [x] FE API clients: wallets.api.ts, orders.api.ts, getMyBids()
