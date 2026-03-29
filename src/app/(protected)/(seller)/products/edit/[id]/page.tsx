@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createProduct, type CreateProductPayload } from "@/lib/api/products.api";
+import { getProductDetail, updateProduct, type UpdateProductPayload } from "@/lib/api/products.api";
 import { listCategories } from "@/lib/api/categories.api";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const productSchema = z.object({
     title: z.string().min(3, "Tiêu đề tối thiểu 3 ký tự"),
@@ -28,28 +29,18 @@ const productSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
-function formatCurrency(value: number) {
-    return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-        maximumFractionDigits: 0,
-    }).format(value);
-}
-
-function calculateRemain(endTime: string) {
-    const diff = new Date(endTime).getTime() - Date.now();
-    if (Number.isNaN(diff) || diff <= 0) return "Đã kết thúc";
-
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const remainMinutes = minutes % 60;
-    return `${hours}h ${remainMinutes}m`;
+function toDateTimeLocalValue(iso: string) {
+    const date = new Date(iso);
+    const timezoneOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
 }
 
 type Notification = { type: "success" | "error"; text: string };
 
-export default function CreateProductPage() {
+export default function EditProductPage() {
     const router = useRouter();
+    const params = useParams();
+    const productId = params.id as string;
     const [notification, setNotification] = useState<Notification | null>(null);
 
     const categoriesQuery = useQuery({
@@ -58,34 +49,45 @@ export default function CreateProductPage() {
         staleTime: 60_000,
     });
 
-    const form = useForm<ProductFormValues>({
-        defaultValues: {
-            title: "",
-            categoryId: "",
-            startPrice: 0,
-            reservePrice: 0,
-            bidIncrement: 100000,
-            startTime: "",
-            endTime: "",
-            antiSnipingTrigger: 300,
-            antiSnipingExtend: 120,
-            description: "",
-        },
+    const productQuery = useQuery({
+        queryKey: QUERY_KEYS.products.detail(productId),
+        queryFn: () => getProductDetail(productId),
+        enabled: !!productId,
     });
 
-    const createMutation = useMutation({
-        mutationFn: (payload: CreateProductPayload) => createProduct(payload),
+    const form = useForm<ProductFormValues>();
+
+    // Pre-fill form when product data loads
+    const product = productQuery.data?.product;
+    const isFormReady = !!product;
+
+    if (product && !form.formState.isDirty && form.getValues("title") === "") {
+        form.reset({
+            title: product.title,
+            categoryId: product.categoryId,
+            startPrice: Number(product.startPrice),
+            reservePrice: product.reservePrice ? Number(product.reservePrice) : 0,
+            bidIncrement: Number(product.bidIncrement),
+            startTime: toDateTimeLocalValue(product.startTime),
+            endTime: toDateTimeLocalValue(product.endTime),
+            antiSnipingTrigger: product.antiSnipingTrigger,
+            antiSnipingExtend: product.antiSnipingExtend,
+            description: product.description,
+        });
+    }
+
+    const updateMutation = useMutation({
+        mutationFn: (payload: UpdateProductPayload) => updateProduct(productId, payload),
         onSuccess: (data) => {
             setNotification({ type: "success", text: `✅ ${data.message}` });
             setTimeout(() => router.push("/products"), 1500);
         },
         onError: (error: { message?: string }) => {
-            setNotification({ type: "error", text: `❌ ${error?.message ?? "Tạo sản phẩm thất bại"}` });
+            setNotification({ type: "error", text: `❌ ${error?.message ?? "Cập nhật thất bại"}` });
             setTimeout(() => setNotification(null), 4000);
         },
     });
 
-    const values = form.watch();
     const categories = categoriesQuery.data?.categories ?? [];
 
     const onSubmit = (data: ProductFormValues) => {
@@ -96,15 +98,12 @@ export default function CreateProductPage() {
             parsed.error.issues.forEach((issue) => {
                 const field = issue.path[0] as keyof ProductFormValues | undefined;
                 if (!field) return;
-                form.setError(field, {
-                    type: "manual",
-                    message: issue.message,
-                });
+                form.setError(field, { type: "manual", message: issue.message });
             });
             return;
         }
 
-        const payload: CreateProductPayload = {
+        const payload: UpdateProductPayload = {
             title: parsed.data.title,
             categoryId: parsed.data.categoryId,
             description: parsed.data.description,
@@ -126,15 +125,17 @@ export default function CreateProductPage() {
             payload.antiSnipingExtend = parsed.data.antiSnipingExtend;
         }
 
-        createMutation.mutate(payload);
+        updateMutation.mutate(payload);
     };
+
+    const isActive = product?.status === "ACTIVE";
 
     return (
         <section className="space-y-6">
             <header>
-                <h1 className="text-2xl font-semibold">Tạo sản phẩm đấu giá</h1>
+                <h1 className="text-2xl font-semibold">Chỉnh sửa sản phẩm</h1>
                 <p className="mt-2 text-sm text-muted-foreground">
-                    Điền thông tin sản phẩm, cấu hình anti-sniping và đặt thời gian đấu giá.
+                    Cập nhật thông tin sản phẩm. Không thể chỉnh sửa sản phẩm đang ACTIVE.
                 </p>
             </header>
 
@@ -152,20 +153,35 @@ export default function CreateProductPage() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
+            {isActive && (
+                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+                    ⚠️ Sản phẩm đang trong trạng thái ACTIVE — không thể chỉnh sửa.
+                </div>
+            )}
+
+            {productQuery.isLoading ? (
+                <div className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-64 w-full" />
+                </div>
+            ) : productQuery.isError ? (
+                <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                    Không thể tải thông tin sản phẩm. Vui lòng thử lại.
+                </p>
+            ) : isFormReady ? (
                 <Card>
                     <CardHeader>
                         <CardTitle>Thông tin sản phẩm</CardTitle>
                         <CardDescription>
-                            Sản phẩm sẽ được tạo với trạng thái DRAFT hoặc SCHEDULED.
+                            ID: {productId} • Status: {product?.status}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent>
                         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium">Tiêu đề</label>
-                                    <Input {...form.register("title")} placeholder="VD: iPhone 14 Pro 128GB" />
+                                    <Input {...form.register("title")} disabled={isActive} />
                                     {form.formState.errors.title && (
                                         <p className="text-xs text-destructive">{form.formState.errors.title.message}</p>
                                     )}
@@ -174,7 +190,8 @@ export default function CreateProductPage() {
                                     <label className="text-sm font-medium">Danh mục</label>
                                     <select
                                         {...form.register("categoryId")}
-                                        className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/40"
+                                        disabled={isActive}
+                                        className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:opacity-50"
                                     >
                                         <option value="">— Chọn danh mục —</option>
                                         {categories.map((cat) => (
@@ -186,130 +203,77 @@ export default function CreateProductPage() {
                                     {form.formState.errors.categoryId && (
                                         <p className="text-xs text-destructive">{form.formState.errors.categoryId.message}</p>
                                     )}
-                                    {categories.length === 0 && !categoriesQuery.isLoading && (
-                                        <p className="text-xs text-muted-foreground">Chưa có danh mục nào. Liên hệ admin.</p>
-                                    )}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium">Giá khởi điểm (VND)</label>
-                                    <Input type="number" min="0" {...form.register("startPrice")} />
-                                    {form.formState.errors.startPrice && (
-                                        <p className="text-xs text-destructive">{form.formState.errors.startPrice.message}</p>
-                                    )}
+                                    <Input type="number" min="0" {...form.register("startPrice")} disabled={isActive} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium">Reserve price (VND)</label>
-                                    <Input type="number" min="0" {...form.register("reservePrice")} />
+                                    <Input type="number" min="0" {...form.register("reservePrice")} disabled={isActive} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium">Bước giá (VND)</label>
-                                    <Input type="number" min="1" {...form.register("bidIncrement")} />
-                                    {form.formState.errors.bidIncrement && (
-                                        <p className="text-xs text-destructive">{form.formState.errors.bidIncrement.message}</p>
-                                    )}
+                                    <Input type="number" min="1" {...form.register("bidIncrement")} disabled={isActive} />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div className="space-y-1">
-                                    <label className="text-sm font-medium">Thời gian bắt đầu (tùy chọn)</label>
-                                    <Input type="datetime-local" {...form.register("startTime")} />
+                                    <label className="text-sm font-medium">Thời gian bắt đầu</label>
+                                    <Input type="datetime-local" {...form.register("startTime")} disabled={isActive} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium">Thời gian kết thúc</label>
-                                    <Input type="datetime-local" {...form.register("endTime")} />
-                                    {form.formState.errors.endTime && (
-                                        <p className="text-xs text-destructive">{form.formState.errors.endTime.message}</p>
-                                    )}
+                                    <Input type="datetime-local" {...form.register("endTime")} disabled={isActive} />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium">Anti-sniping trigger (giây)</label>
-                                    <Input type="number" min="30" {...form.register("antiSnipingTrigger")} />
+                                    <Input type="number" min="30" {...form.register("antiSnipingTrigger")} disabled={isActive} />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-sm font-medium">Anti-sniping extend (giây)</label>
-                                    <Input type="number" min="30" {...form.register("antiSnipingExtend")} />
+                                    <Input type="number" min="30" {...form.register("antiSnipingExtend")} disabled={isActive} />
                                 </div>
                             </div>
 
                             <div className="space-y-1">
                                 <label className="text-sm font-medium">Mô tả sản phẩm</label>
                                 <textarea
-                                    className="min-h-24 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/40"
+                                    className="min-h-24 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:opacity-50"
                                     {...form.register("description")}
-                                    placeholder="Mô tả chi tiết về sản phẩm, nguồn gốc, tình trạng..."
+                                    disabled={isActive}
                                 />
-                                {form.formState.errors.description && (
-                                    <p className="text-xs text-destructive">{form.formState.errors.description.message}</p>
-                                )}
                             </div>
 
-                            <Button
-                                type="submit"
-                                size="lg"
-                                className="w-full"
-                                disabled={createMutation.isPending}
-                            >
-                                {createMutation.isPending ? "Đang tạo..." : "🚀 Tạo sản phẩm"}
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    type="submit"
+                                    size="lg"
+                                    className="flex-1"
+                                    disabled={updateMutation.isPending || isActive}
+                                >
+                                    {updateMutation.isPending ? "Đang cập nhật..." : "💾 Lưu thay đổi"}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="lg"
+                                    onClick={() => router.push("/products")}
+                                >
+                                    Hủy
+                                </Button>
+                            </div>
                         </form>
                     </CardContent>
                 </Card>
-
-                {/* ─── Live Preview ─ */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Xem trước</CardTitle>
-                        <CardDescription>
-                            Preview nhanh thông tin sản phẩm trong khi chỉnh sửa.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm">
-                        <div>
-                            <p className="font-medium">{values.title || "Chưa có tiêu đề"}</p>
-                            <p className="text-xs text-muted-foreground">
-                                {categories.find((c) => c.id === values.categoryId)?.name || "Chưa chọn danh mục"}
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <Badge variant="outline">Start: {formatCurrency(values.startPrice || 0)}</Badge>
-                            {values.reservePrice && values.reservePrice > 0 && (
-                                <Badge variant="secondary">Reserve: {formatCurrency(values.reservePrice)}</Badge>
-                            )}
-                        </div>
-
-                        <div className="space-y-1 rounded-lg border border-border/70 bg-background/70 p-3 text-xs text-muted-foreground">
-                            {values.endTime && (
-                                <p>
-                                    Remaining:{" "}
-                                    <span className="font-medium text-foreground">
-                                        {calculateRemain(values.endTime)}
-                                    </span>
-                                </p>
-                            )}
-                            <p>
-                                Anti-sniping: nếu còn ≤ <b>{values.antiSnipingTrigger || 0}s</b> và có bid mới,
-                                sẽ gia hạn thêm <b>{values.antiSnipingExtend || 0}s</b>.
-                            </p>
-                            <p>Bước giá tối thiểu: {formatCurrency(values.bidIncrement || 0)}</p>
-                        </div>
-
-                        {values.description && (
-                            <div className="rounded-lg border border-border/70 bg-background/70 p-3 text-xs text-muted-foreground">
-                                <p className="mb-1 font-medium text-foreground">Mô tả:</p>
-                                <p className="whitespace-pre-wrap">{values.description}</p>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+            ) : null}
         </section>
     );
 }

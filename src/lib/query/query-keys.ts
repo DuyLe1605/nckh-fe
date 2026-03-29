@@ -17,4 +17,14 @@ export const QUERY_KEYS = {
         list: (params?: Record<string, string | number | undefined>) => ["orders", "list", params] as const,
         detail: (id: string) => ["orders", "detail", id] as const,
     },
+    products: {
+        myList: (params?: Record<string, string | number | undefined>) => ["products", "my", params] as const,
+        detail: (id: string) => ["products", "detail", id] as const,
+    },
+    categories: {
+        list: ["categories", "list"] as const,
+    },
+    admin: {
+        users: (params?: Record<string, string | number | undefined>) => ["admin", "users", params] as const,
+    },
 } as const;

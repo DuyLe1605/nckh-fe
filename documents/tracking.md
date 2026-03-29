@@ -66,16 +66,16 @@
 |---------|------|--------|----------|-------|
 | BD-001 | Bidder dashboard (winning/outbid tabs) | ✅ Done | — | Real API via GET /bids/me |
 | BD-002 | Wallet page (balance + deposit) | ✅ Done | — | Real API via GET /wallets/me + POST deposit |
-| BD-003 | Order history (buyer view) | [ ] Todo | P1 | After order API ready |
+| BD-003 | Order history (buyer view) | ✅ Done | — | Real API via GET /orders (/my-orders route) |
 | BD-004 | Watchlist | [ ] Todo | P2 | Save favorite auctions |
 
 ## Epic 6 — Seller Workflows
 
 | Task ID | Task | Status | Priority | Notes |
 |---------|------|--------|----------|-------|
-| SL-001 | Seller create product form | 🔄 Mock ~40% | P1 | Form UI exists, no API |
-| SL-002 | Seller edit product form | 🔄 Mock ~30% | P1 | Needs API integration |
-| SL-003 | Seller "my products" list | 🔄 Mock ~20% | P1 | Needs sellerId filter API |
+| SL-001 | Seller create product form | ✅ Done | — | Real API POST /products + category dropdown |
+| SL-002 | Seller edit product form | ✅ Done | — | Real API PUT /products/:id, block ACTIVE |
+| SL-003 | Seller "my products" list | ✅ Done | — | Real API GET /products?sellerId= + filter/delete |
 | SL-004 | Seller orders management | ✅ Done | — | Real API via GET /orders + PATCH status |
 | SL-005 | Seller revenue overview | [ ] Todo | P2 | After order system |
 
@@ -83,11 +83,11 @@
 
 | Task ID | Task | Status | Priority | Notes |
 |---------|------|--------|----------|-------|
-| AC-001 | Admin users management UI | [ ] Todo | P1 | Table + search + actions |
+| AC-001 | Admin users management UI | ✅ Done | — | Search + role/status filter + ban/suspend/activate |
 | AC-002 | Reports/disputes moderation UI | [ ] Todo | P2 | Review + resolve |
 | AC-003 | Admin analytics dashboard | [ ] Todo | P2 | Charts + stats |
 | AC-004 | Category management UI | [ ] Todo | P2 | Tree CRUD |
-| AC-005 | Admin layout + sidebar | 🔄 Skeleton | P1 | Basic layout exists |
+| AC-005 | Admin layout + sidebar | ✅ Done | — | Navigation + active state |
 
 ## Epic 8 — Quality & Performance
 
@@ -105,14 +105,15 @@
 
 ### 🔥 Đang làm (In Progress)
 
-- (trống — Phase 3 hoàn thành)
+- (trống — Phase 5 hoàn thành)
 
 ### 📋 Tiếp theo (Next up)
 
-- [ ] **BD-003** Order history (buyer view)
-- [ ] **SL-001** Seller create product kết nối API thật
-- [ ] **SL-003** Seller "my products" list kết nối API
-- [ ] **AC-001** Admin users management UI
+- [ ] **LB-007** Reconnect + fallback polling
+- [ ] **AC-002** Reports/disputes moderation UI
+- [ ] **AC-003** Admin analytics dashboard
+- [ ] **AC-004** Category management UI
+- [ ] **BD-004** Watchlist
 
 ### ✅ Hoàn thành gần đây
 
@@ -130,3 +131,9 @@
 - [x] Wallet page real API + deposit (Phase 3)
 - [x] Seller Orders real API + status actions (Phase 3)
 - [x] FE API clients: wallets.api.ts, orders.api.ts, getMyBids()
+- [x] Seller Products CRUD real API (Phase 4): create + edit + list + delete
+- [x] products.api.ts, categories.api.ts, admin.api.ts (Phase 4/5)
+- [x] Bidder Order History /my-orders real API (Phase 4)
+- [x] Admin Users Management UI: search + filter + ban/suspend (Phase 5)
+- [x] Admin Layout Sidebar with nav + active state (Phase 5)
+- [x] Category dropdown trên seller product forms (Phase 5)

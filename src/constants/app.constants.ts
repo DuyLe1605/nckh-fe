@@ -34,8 +34,10 @@ export const ROUTE_CONSTANTS = {
     AUCTIONS_PREFIX: "/auctions",
     DASHBOARD: "/dashboard",
     WALLET: "/wallet",
+    PRODUCTS: "/products",
     PRODUCTS_CREATE: "/products/create",
     ORDERS: "/orders",
+    MY_ORDERS: "/my-orders",
     USERS: "/users",
     DISPUTES: "/disputes",
 } as const;
