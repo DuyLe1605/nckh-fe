@@ -73,11 +73,12 @@ export function LiveBidPanel({
 }: LiveBidPanelProps) {
     const queryClient = useQueryClient();
     const { currentBidPrice, setCurrentBidPrice } = useAuctionsUiStore();
-    const timeLeft = useCountdown(effectiveEndTime);
 
     const livePrice = currentBidPrice ?? initialPrice;
     const minBid = livePrice + bidIncrement;
 
+    const [liveEndTime, setLiveEndTime] = useState(effectiveEndTime);
+    const timeLeft = useCountdown(liveEndTime);
     const [bidAmount, setBidAmount] = useState("");
     const [isOutbid, setIsOutbid] = useState(false);
     const [notification, setNotification] = useState<Notification | null>(null);
@@ -102,11 +103,14 @@ export function LiveBidPanel({
 
     // ── Socket: realtime price update ─────────────────────────────────────────
     const handleBidUpdate = useCallback(
-        (payload: { productId: string; newPrice?: number; prevWinnerBidderId?: string | null }) => {
+        (payload: { productId: string; newPrice?: number; effectiveEndTime?: string; prevWinnerBidderId?: string | null }) => {
             if (payload.newPrice) {
                 setCurrentBidPrice(payload.newPrice);
                 void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.bids.history(productId) });
                 void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auctions.detail(productId) });
+            }
+            if (payload.effectiveEndTime) {
+                setLiveEndTime(payload.effectiveEndTime);
             }
             if (currentUserId && payload.prevWinnerBidderId === currentUserId) {
                 setIsOutbid(true);

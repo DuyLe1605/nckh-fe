@@ -107,6 +107,7 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
             setRoleCookie(role);
             setAccessToken(session.accessToken);
             setSession({
+                id: session.user?.id,
                 role,
                 email,
                 fullName: session.user?.fullName,

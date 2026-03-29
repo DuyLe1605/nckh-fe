@@ -2,10 +2,11 @@ import { apiClient } from "@/lib/api/axios-client";
 import { APP_CONSTANTS } from "@/constants/app.constants";
 import { getDeviceId } from "@/lib/auth/device-id";
 
-export type AuthRole = "BIDDER" | "SELLER" | "ADMIN";
-export type RegisterRole = Exclude<AuthRole, "ADMIN">;
+export type AuthRole = "BIDDER" | "SELLER" | "ADMIN" | "SUPER_ADMIN";
+export type RegisterRole = Exclude<AuthRole, "ADMIN" | "SUPER_ADMIN">;
 
 export type AuthUser = {
+    id?: string;
     email: string;
     role: AuthRole;
     fullName?: string;

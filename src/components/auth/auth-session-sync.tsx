@@ -22,6 +22,7 @@ export function AuthSessionSync() {
                 if (payload.user?.email && payload.user.role) {
                     setRoleCookie(payload.user.role);
                     setSession({
+                        id: payload.user.id,
                         role: payload.user.role,
                         email: payload.user.email,
                         fullName: payload.user.fullName,

@@ -26,6 +26,7 @@ export default function ProfilePage() {
         if (!user?.email || !user.role) return;
 
         setSession({
+            id: user.id,
             role: user.role,
             email: user.email,
             fullName: user.fullName,

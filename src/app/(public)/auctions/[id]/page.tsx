@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getAuctionDetail } from "@/lib/api/auctions.api";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
+import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,6 +30,7 @@ function formatCurrency(value: string | number) {
 
 export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
     const { id } = use(params);
+    const currentUserId = useAuthUiStore((s) => s.currentUserId);
 
     const auctionsDetailQuery = useQuery({
         queryKey: QUERY_KEYS.auctions.detail(id),
@@ -98,7 +100,7 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
                                     Bước giá:{" "}
                                     <span className="font-semibold">{formatCurrency(auction.bidIncrement)}</span>
                                 </p>
-                                <p>Kết thúc: {new Date(auction.endTime).toLocaleString("vi-VN")}</p>
+                                <p>Kết thúc: {new Date(auction.effectiveEndTime ?? auction.endTime).toLocaleString("vi-VN")}</p>
                             </div>
 
                             <div className="grid gap-2 rounded-lg border border-border/70 p-3 md:grid-cols-2">
@@ -114,16 +116,18 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
                         </CardContent>
                     </Card>
 
-                    {/* ─── Live Bid Panel (Sprint 4) ─ */}
+                    {/* ─── Live Bid Panel ─ */}
                     <LiveBidPanel
                         productId={id}
                         initialPrice={Number(auction.currentPrice)}
                         bidIncrement={Number(auction.bidIncrement)}
                         status={auction.status}
-                        effectiveEndTime={auction.endTime}
+                        effectiveEndTime={auction.effectiveEndTime ?? auction.endTime}
+                        currentUserId={currentUserId ?? undefined}
                     />
                 </div>
             )}
         </main>
     );
 }
+

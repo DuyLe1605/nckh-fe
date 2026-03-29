@@ -2,118 +2,128 @@
 
 > Scope: chỉ theo dõi frontend trong `FE/`.
 > Trạng thái: `[ ]` chưa làm, `[~]` đang làm, `[x]` xong, `[-]` block/hoãn.
+> Ưu tiên: P0 = Critical, P1 = High, P2 = Medium, P3 = Low.
 
-## Sprint 1 — Foundation (Frontend)
+---
 
-### A. Project bootstrap
+## Epic 1 — Foundation & Infrastructure
 
-- [x] Khởi tạo Next.js App Router + TypeScript trong `FE/`
-- [x] Chuẩn hóa package manager dùng `pnpm`
-- [x] Cài Tailwind CSS
-- [x] Cài và cấu hình shadcn/ui
+| Task ID | Task | Status | Priority | Notes |
+|---------|------|--------|----------|-------|
+| F-001 | Next.js App Router + TypeScript | ✅ Done | — | `pnpm build` pass |
+| F-002 | Tailwind CSS + shadcn/ui | ✅ Done | — | Component library |
+| F-003 | Route structure: (public) + (protected) | ✅ Done | — | Role zones created |
+| F-004 | Middleware RBAC (route guard) | ✅ Done | — | Static matcher |
+| F-005 | Axios instance + interceptors | ✅ Done | — | Auto-refresh, error map |
+| F-006 | TanStack Query provider + query keys | ✅ Done | — | Centralized keys |
+| F-007 | Zustand stores (auth-ui, auctions-ui) | ✅ Done | — | Domain-split stores |
+| F-008 | Dark mode (next-themes) | ✅ Done | — | Toggle working |
+| F-009 | react-hook-form + zod | ✅ Done | — | Validation pipeline |
+| F-010 | useAuctionSocket hook | ✅ Done | — | Socket.IO client |
+| F-011 | Constants centralized | ✅ Done | — | app.constants.ts |
 
-### B. Route structure
+## Epic 2 — Auth UX & Route Guard
 
-- [x] Tạo `(public)` routes
-- [x] Tạo `(protected)` routes
-- [x] Tạo vùng role-based placeholders: `(bidder)`, `(seller)`, `(admin)`
+| Task ID | Task | Status | Priority | Notes |
+|---------|------|--------|----------|-------|
+| A-001 | Login form + API integration | 🔄 ~90% | P0 | Token handling works |
+| A-002 | Register form (BIDDER/SELLER role select) | 🔄 ~90% | P0 | Role picker UI |
+| A-003 | Refresh token flow (multi-tab safe) | 🔄 ~80% | P0 | Race condition mitigated |
+| A-004 | Logout / Logout all devices | ✅ Done | — | API call + cookie clear |
+| A-005 | Profile/session state (Zustand) | ✅ Done | — | Non-sensitive only |
+| A-006 | Middleware role guard | ✅ Done | — | Admin/Seller/Bidder zones |
+| A-007 | ⚡ Auth store: thêm `currentUserId` | [~] Fix | **P0** | ĐANG SỬA: cần userId cho LiveBidPanel |
+| A-008 | ⚡ Auth type: thêm `id` for user | [~] Fix | **P0** | Auth API type update |
+| A-009 | SUPER_ADMIN role support (FE constants) | [ ] Todo | P1 | Enum + route guard update |
 
-### C. Runtime skeleton
+## Epic 3 — Public Auction Browsing
 
-- [x] Tạo `middleware.ts` skeleton cho role gating
-- [x] Tạo socket hook `useAuctionSocket`
-- [x] Tạo constants cho app-level values
-- [x] Thiết lập `.env.local` + `.env.example`
-- [x] Thiết lập Axios base client + interceptors chuẩn
-- [x] Thiết lập TanStack Query provider + query key conventions
-- [x] Thiết lập Zustand stores nền tảng cho UI/client state
-- [x] Thiết lập dark mode bằng next-themes + theme toggle
-- [x] Cài react-hook-form + zod cho form validation pipeline
+| Task ID | Task | Status | Priority | Notes |
+|---------|------|--------|----------|-------|
+| PB-001 | Auctions list page (/auctions) | ✅ Done | — | Filter/sort/pagination |
+| PB-002 | Auction detail page (/auctions/:id) | ✅ Done | — | Product info + LiveBidPanel |
+| PB-003 | ⚡ Fix: truyền currentUserId → LiveBidPanel | [~] Fix | **P0** | ĐANG SỬA: Buyer thấy bid form |
+| PB-004 | ⚡ Fix: effectiveEndTime prop sai | [~] Fix | **P0** | Dùng endTime thay effectiveEndTime |
+| PB-005 | Skeleton/loading/error states | ✅ Done | — | Skeleton UI exists |
+| PB-006 | Trang chủ (/) hero + featured auctions | 🔄 Basic | P2 | Cần redesign |
 
-## Sprint 2 — Auth UX + Route Guard
+## Epic 4 — Live Bidding Experience
 
-- [~] Form login/register
-- [~] Luồng token/cookie handling an toàn
-- [x] Middleware role guard hoàn chỉnh
-- [x] Client-side fallback guard + redirect UX
-- [x] Trang profile/session state cơ bản
-- [x] Auth API integration bằng Axios + TanStack Query mutations
-- [~] Auth/session UI state bằng Zustand (không lưu dữ liệu nhạy cảm)
-- [x] Logout all devices flow (gọi `POST /auth/logout-all`)
+| Task ID | Task | Status | Priority | Notes |
+|---------|------|--------|----------|-------|
+| LB-001 | LiveBidPanel component | 🔄 ~70% | **P0** | Price, form, history |
+| LB-002 | Bid form (amount input + submit) | ✅ Done | — | Mutation working |
+| LB-003 | Real-time price update (WS) | ✅ Done | — | onBidUpdate handler |
+| LB-004 | Countdown timer | ✅ Done | — | useCountdown hook |
+| LB-005 | ⚡ Countdown reads effectiveEndTime đúng | [~] Fix | **P0** | Nhận WS event update timer |
+| LB-006 | Outbid notification banner | 🔄 ~60% | P0 | Needs currentUserId |
+| LB-007 | Reconnect + fallback polling | [ ] Todo | P1 | Socket disconnect handler |
+| LB-008 | Bid history query (no auth required) | [~] Fix | **P0** | Cần BE fix trước |
 
-## Sprint 3 — Public Auction Browsing
+## Epic 5 — Bidder Workflows
 
-- [ ] Trang home/list auctions (SSR)
-- [ ] Trang chi tiết auction (SSR + client islands)
-- [ ] Search/filter/sort UI
-- [ ] Skeleton/loading/error states chuẩn
-- [ ] Query cache strategy cho list/detail (staleTime, invalidation)
-- [ ] Filter/sort local state bằng Zustand selectors
+| Task ID | Task | Status | Priority | Notes |
+|---------|------|--------|----------|-------|
+| BD-001 | Bidder dashboard (winning/outbid tabs) | 🔄 Mock ~30% | P1 | Cần API thật |
+| BD-002 | Wallet page (balance + deposit) | 🔄 Mock ~20% | P1 | Cần API integration |
+| BD-003 | Order history (buyer view) | [ ] Todo | P1 | After order API ready |
+| BD-004 | Watchlist | [ ] Todo | P2 | Save favorite auctions |
 
-## Sprint 4 — Live Bidding Experience
+## Epic 6 — Seller Workflows
 
-- [ ] Live bid panel realtime
-- [ ] Đồng bộ current price + bid history theo event
-- [ ] UX xử lý outbid/conflict
-- [ ] Reconnect + fallback refresh strategy
-- [ ] Reconcile socket events với TanStack Query cache nhất quán
+| Task ID | Task | Status | Priority | Notes |
+|---------|------|--------|----------|-------|
+| SL-001 | Seller create product form | 🔄 Mock ~40% | P1 | Form UI exists, no API |
+| SL-002 | Seller edit product form | 🔄 Mock ~30% | P1 | Needs API integration |
+| SL-003 | Seller "my products" list | 🔄 Mock ~20% | P1 | Needs sellerId filter API |
+| SL-004 | Seller orders management | 🔄 Mock ~15% | P1 | Ship action |
+| SL-005 | Seller revenue overview | [ ] Todo | P2 | After order system |
 
-## Sprint 5 — Bidder/Seller Workflows
+## Epic 7 — Admin Console
 
-- [x] Bidder dashboard (winning/outbid/watchlist)
-- [x] Seller create/edit product forms
-- [x] Countdown theo `effective_end_time`
-- [x] Hiển thị anti-sniping extension
+| Task ID | Task | Status | Priority | Notes |
+|---------|------|--------|----------|-------|
+| AC-001 | Admin users management UI | [ ] Todo | P1 | Table + search + actions |
+| AC-002 | Reports/disputes moderation UI | [ ] Todo | P2 | Review + resolve |
+| AC-003 | Admin analytics dashboard | [ ] Todo | P2 | Charts + stats |
+| AC-004 | Category management UI | [ ] Todo | P2 | Tree CRUD |
+| AC-005 | Admin layout + sidebar | 🔄 Skeleton | P1 | Basic layout exists |
 
-## Sprint 6 — Admin Console
+## Epic 8 — Quality & Performance
 
-- [ ] Admin users management UI
-- [ ] Reports/disputes moderation UI
-- [ ] Basic review actions + audit surfaces
+| Task ID | Task | Status | Priority | Notes |
+|---------|------|--------|----------|-------|
+| QP-001 | Unit tests (hooks, utils) | [ ] Todo | P2 | Critical hooks first |
+| QP-002 | E2E tests (auth + bid flow) | [ ] Todo | P2 | Playwright/Cypress |
+| QP-003 | Error boundaries | [ ] Todo | P2 | Graceful error UI |
+| QP-004 | Bundle optimization | [ ] Todo | P3 | Code splitting |
+| QP-005 | Dockerfile frontend | [ ] Todo | P2 | Production config |
 
-## Sprint 7 — Quality & Delivery
-
-### Quality
-
-- [ ] Unit tests cho hooks/util quan trọng
-- [ ] Integration/E2E smoke cho auth + protected routes
-- [ ] Tests cho Axios interceptors + TanStack Query invalidation + Zustand stores
-
-### Performance & security
-
-- [ ] Rà soát caching/revalidate strategy theo route
-- [ ] Chuẩn hóa error boundaries
-- [ ] Tối ưu bundle + image/font usage
-
-### Delivery
-
-- [ ] Dockerfile frontend
-- [ ] CI checks: lint + typecheck + build
-- [ ] Deployment checklist theo env
+---
 
 ## Kanban hiện tại (FE)
 
-### In Progress
+### 🔥 Đang làm (In Progress)
 
-- [~] Hoàn thiện Sprint 2 auth flow (token contract ổn định khi BE thay đổi payload)
-- [~] Chuẩn hóa rule middleware static matcher và route-group conventions (file `FE/documents/instructions.md`)
-- [~] Kết nối API thật cho Sprint 5 seller create/update sau khi BE chốt payload cuối
-- [~] Harden refresh flow đa tab để tránh false logout khi rotation race
+- [~] **A-007** Auth store: thêm `currentUserId` field cả type lẫn store
+- [~] **A-008** Auth API type: thêm `id` to AuthUser type
+- [~] **PB-003** Auction detail page: truyền `currentUserId` vào LiveBidPanel
+- [~] **PB-004** Fix `effectiveEndTime` prop (hiện dùng sai `endTime`)
+- [~] **LB-005** LiveBidPanel: nhận WS event cập nhật effectiveEndTime
+- [~] **LB-008** Bid history: đảm bảo query hoạt động khi BE allow public
 
-### Next up
+### 📋 Tiếp theo (Next up)
 
-- [ ] Bổ sung error UX chi tiết cho refresh expired vs revoked
-- [ ] Bổ sung test cho logout-all và multi-tab sync
-- [ ] Hook bidder dashboard/watchlist với dữ liệu realtime từ API + socket events
-- [ ] Bổ sung optimistic UX cho seller create/edit product form
-- [ ] Chuyển bidder/seller dashboard từ mock data sang API thật + query invalidation
+- [ ] **BD-001** Bidder dashboard kết nối API thật
+- [ ] **SL-001** Seller create product kết nối API thật
+- [ ] **BD-002** Wallet page kết nối API thật
+- [ ] **A-009** SUPER_ADMIN role support
 
-### Done
+### ✅ Hoàn thành gần đây
 
-- [x] Hoàn thành frontend scaffolding Sprint 1
-- [x] Cấu hình thành công Tailwind + shadcn/ui + pnpm
-- [x] Khởi động Sprint 2 với modern auth UI + dark mode + data layer foundation
-- [x] Sửa contract auth: register chọn role `BIDDER/SELLER`, login lấy role từ backend response
-- [x] Triển khai Sprint 5 UI workflows + dữ liệu mẫu đa dạng cho bidder/seller
-- [x] Header protected hiển thị role động bằng role badge
-- [x] Custom status badge cho role/order/auction state surfaces
+- [x] Sprint 1 scaffolding hoàn chỉnh
+- [x] Auth UI + dark mode + data layer foundation
+- [x] Auctions list/detail pages with real API
+- [x] LiveBidPanel core UI (price, countdown, history skeleton)
+- [x] Header role badge + status badges
+- [x] Middleware RBAC route guard

@@ -20,6 +20,7 @@ export type AuctionItem = {
     currentPrice: string | number;
     bidIncrement: string | number;
     endTime: string;
+    effectiveEndTime?: string;
     createdAt: string;
 };
 
