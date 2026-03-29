@@ -4,8 +4,14 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { getProductDetail, updateProduct, type UpdateProductPayload } from "@/lib/api/products.api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    getProductDetail,
+    updateProduct,
+    uploadProductImages,
+    deleteProductImage,
+    type UpdateProductPayload,
+} from "@/lib/api/products.api";
 import { listCategories } from "@/lib/api/categories.api";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { APP_CONSTANTS } from "@/constants/app.constants";
 
 const productSchema = z.object({
     title: z.string().min(3, "Tiêu đề tối thiểu 3 ký tự"),
@@ -40,8 +47,11 @@ type Notification = { type: "success" | "error"; text: string };
 export default function EditProductPage() {
     const router = useRouter();
     const params = useParams();
+    const queryClient = useQueryClient();
     const productId = params.id as string;
     const [notification, setNotification] = useState<Notification | null>(null);
+    const [newImages, setNewImages] = useState<string[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
 
     const categoriesQuery = useQuery({
         queryKey: QUERY_KEYS.categories.list,
@@ -77,14 +87,38 @@ export default function EditProductPage() {
     }
 
     const updateMutation = useMutation({
-        mutationFn: (payload: UpdateProductPayload) => updateProduct(productId, payload),
+        mutationFn: async (payload: UpdateProductPayload) => {
+            const result = await updateProduct(productId, payload);
+            if (newImages.length > 0) {
+                setIsUploading(true);
+                try {
+                    await uploadProductImages(productId, newImages);
+                } finally {
+                    setIsUploading(false);
+                }
+            }
+            return result;
+        },
         onSuccess: (data) => {
-            setNotification({ type: "success", text: `✅ ${data.message}` });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.products.detail(productId) });
+            setNotification({ type: "success", text: `✅ Sản phẩm được cập nhật thành công!` });
             setTimeout(() => router.push("/products"), 1500);
         },
         onError: (error: { message?: string }) => {
             setNotification({ type: "error", text: `❌ ${error?.message ?? "Cập nhật thất bại"}` });
+            setIsUploading(false);
             setTimeout(() => setNotification(null), 4000);
+        },
+    });
+
+    const deleteImageMutation = useMutation({
+        mutationFn: (index: number) => deleteProductImage(productId, index),
+        onSuccess: () => {
+            setNotification({ type: "success", text: "✅ Đã xóa ảnh" });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.products.detail(productId) });
+        },
+        onError: () => {
+            setNotification({ type: "error", text: "❌ Xóa ảnh thất bại" });
         },
     });
 
@@ -126,6 +160,29 @@ export default function EditProductPage() {
         }
 
         updateMutation.mutate(payload);
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        const existingCount = product?.imageUrls?.length ?? 0;
+        if (files.length + newImages.length + existingCount > 5) {
+            setNotification({ type: "error", text: "❌ Tối đa 5 ảnh tổng cộng" });
+            return;
+        }
+
+        files.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (typeof ev.target?.result === "string") {
+                    setNewImages((prev) => [...prev, ev.target!.result as string]);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeNewImage = (index: number) => {
+        setNewImages((prev) => prev.filter((_, i) => i !== index));
     };
 
     const isActive = product?.status === "ACTIVE";
@@ -252,14 +309,67 @@ export default function EditProductPage() {
                                 />
                             </div>
 
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Hình ảnh sản phẩm (Tối đa 5 ảnh)</label>
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageChange}
+                                    disabled={isActive || (product?.imageUrls?.length ?? 0) + newImages.length >= 5}
+                                />
+                                <div className="grid grid-cols-5 gap-2 mt-2">
+                                    {/* Existing Images */}
+                                    {product?.imageUrls?.map((url: string, idx: number) => {
+                                        const fullUrl = url.startsWith("http")
+                                            ? url
+                                            : `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace(APP_CONSTANTS.API_PREFIX, "")}${url}`;
+                                        return (
+                                            <div key={`exist-${idx}`} className="relative aspect-square rounded-md overflow-hidden border">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={fullUrl} alt={`Product ${idx}`} className="object-cover w-full h-full" />
+                                                {!isActive && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => deleteImageMutation.mutate(idx)}
+                                                        disabled={deleteImageMutation.isPending}
+                                                        className="absolute top-1 right-1 bg-destructive/80 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-destructive disabled:opacity-50"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                    {/* New Images */}
+                                    {newImages.map((img, idx) => (
+                                        <div key={`new-${idx}`} className="relative aspect-square rounded-md overflow-hidden border border-primary">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={img} alt={`New preview ${idx}`} className="object-cover w-full h-full opacity-80" />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeNewImage(idx)}
+                                                className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-black"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                             <div className="flex gap-2">
                                 <Button
                                     type="submit"
                                     size="lg"
                                     className="flex-1"
-                                    disabled={updateMutation.isPending || isActive}
+                                    disabled={updateMutation.isPending || isUploading || isActive}
                                 >
-                                    {updateMutation.isPending ? "Đang cập nhật..." : "💾 Lưu thay đổi"}
+                                    {updateMutation.isPending || isUploading
+                                        ? isUploading
+                                            ? "Đang tải ảnh lên..."
+                                            : "Đang cập nhật..."
+                                        : "💾 Lưu thay đổi"}
                                 </Button>
                                 <Button
                                     type="button"

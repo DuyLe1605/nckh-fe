@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LiveBidPanel } from "@/components/auction/LiveBidPanel";
-import { ROUTE_CONSTANTS } from "@/constants/app.constants";
+import { ReportDialog } from "@/components/auction/ReportDialog";
+import { ROUTE_CONSTANTS, APP_CONSTANTS } from "@/constants/app.constants";
 
 type AuctionDetailPageProps = {
     params: Promise<{ id: string }>;
@@ -82,7 +83,15 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
                         <CardHeader>
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <CardTitle className="text-2xl">{auction.title}</CardTitle>
-                                <Badge variant="outline">{auction.status}</Badge>
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="outline">{auction.status}</Badge>
+                                    {currentUserId && auction.seller?.id !== currentUserId && (
+                                        <ReportDialog
+                                            reportedUserId={auction.seller?.id ?? ""}
+                                            productId={auction.id}
+                                        />
+                                    )}
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4 text-sm">
@@ -113,6 +122,26 @@ export default function AuctionDetailPage({ params }: AuctionDetailPageProps) {
                                     <span className="font-medium">{auction.category?.name ?? "N/A"}</span>
                                 </p>
                             </div>
+
+                            {/* Image Gallery */}
+                            {auction.imageUrls && auction.imageUrls.length > 0 && (
+                                <div className="space-y-2 mt-4">
+                                    <h3 className="font-medium">Hình ảnh sản phẩm</h3>
+                                    <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
+                                        {auction.imageUrls.map((url: string, index: number) => {
+                                            const fullUrl = url.startsWith("http")
+                                                ? url
+                                                : `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace(APP_CONSTANTS.API_PREFIX, "")}${url}`;
+                                            return (
+                                                <div key={index} className="flex-none w-48 h-48 sm:w-64 sm:h-64 relative rounded-lg overflow-hidden border snap-center">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={fullUrl} alt={`Product Image ${index + 1}`} className="w-full h-full object-cover" />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 

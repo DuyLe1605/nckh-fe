@@ -22,6 +22,7 @@ export type AuctionItem = {
     endTime: string;
     effectiveEndTime?: string;
     createdAt: string;
+    imageUrls?: string[];
 };
 
 type PaginationPayload = {

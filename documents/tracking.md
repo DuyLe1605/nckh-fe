@@ -3,6 +3,7 @@
 > Scope: chỉ theo dõi frontend trong `FE/`.
 > Trạng thái: `[ ]` chưa làm, `[~]` đang làm, `[x]` xong, `[-]` block/hoãn.
 > Ưu tiên: P0 = Critical, P1 = High, P2 = Medium, P3 = Low.
+> **RULE**: Luôn sử dụng `pnpm` để cài đặt dependencies và chạy script (`pnpm install`, `pnpm build`, v.v...).
 
 ---
 
@@ -84,9 +85,9 @@
 | Task ID | Task | Status | Priority | Notes |
 |---------|------|--------|----------|-------|
 | AC-001 | Admin users management UI | ✅ Done | — | Search + role/status filter + ban/suspend/activate |
-| AC-002 | Reports/disputes moderation UI | [ ] Todo | P2 | Review + resolve |
+| AC-002 | Reports/disputes moderation UI | ✅ Done | — | Review + resolve |
 | AC-003 | Admin analytics dashboard | [ ] Todo | P2 | Charts + stats |
-| AC-004 | Category management UI | [ ] Todo | P2 | Tree CRUD |
+| AC-004 | Category management UI | ✅ Done | — | Tree CRUD |
 | AC-005 | Admin layout + sidebar | ✅ Done | — | Navigation + active state |
 
 ## Epic 8 — Quality & Performance
@@ -109,11 +110,9 @@
 
 ### 📋 Tiếp theo (Next up)
 
-- [ ] **LB-007** Reconnect + fallback polling
-- [ ] **AC-002** Reports/disputes moderation UI
 - [ ] **AC-003** Admin analytics dashboard
-- [ ] **AC-004** Category management UI
 - [ ] **BD-004** Watchlist
+- [ ] Wallet Cash-out review flow
 
 ### ✅ Hoàn thành gần đây
 
@@ -137,3 +136,6 @@
 - [x] Admin Users Management UI: search + filter + ban/suspend (Phase 5)
 - [x] Admin Layout Sidebar with nav + active state (Phase 5)
 - [x] Category dropdown trên seller product forms (Phase 5)
+- [x] Admin Categories CRUD Management (Phase 6)
+- [x] Admin Reports & Disputes Moderation (Phase 6) 
+- [x] Product Image Uploads Local Storage (Phase 6)

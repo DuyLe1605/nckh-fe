@@ -10,15 +10,16 @@ export type ProductItem = {
     categoryId: string;
     title: string;
     description: string;
-    startPrice: string | number;
-    currentPrice: string | number;
-    reservePrice?: string | number | null;
-    bidIncrement: string | number;
-    startTime: string;
-    endTime: string;
-    effectiveEndTime: string;
+    startPrice: string;
+    currentPrice: string;
+    reservePrice?: string;
+    bidIncrement: string;
+    startTime: string; // ISO String
+    endTime: string; // ISO String
+    effectiveEndTime?: string; // ISO String
     antiSnipingTrigger: number;
     antiSnipingExtend: number;
+    imageUrls?: string[];
     status: ProductStatus;
     version: number;
     createdAt: string;
@@ -107,8 +108,25 @@ export async function updateProduct(id: string, payload: UpdateProductPayload) {
     return response.data;
 }
 
-export async function deleteProduct(id: string) {
-    const response = await apiClient.delete<DeleteProductResponse>(`/products/${id}`);
+export async function deleteProduct(id: string): Promise<{ message: string }> {
+    const response = await apiClient.delete<{ message: string }>(`/products/${id}`);
+    return response.data;
+}
+
+export async function uploadProductImages(
+    id: string,
+    images: string[],
+): Promise<{ message: string; product: ProductItem }> {
+    const response = await apiClient.post<{ message: string; product: ProductItem }>(`/products/${id}/images`, {
+        images,
+    });
+    return response.data;
+}
+
+export async function deleteProductImage(id: string, index: number): Promise<{ message: string; product: ProductItem }> {
+    const response = await apiClient.delete<{ message: string; product: ProductItem }>(
+        `/products/${id}/images/${index}`,
+    );
     return response.data;
 }
 

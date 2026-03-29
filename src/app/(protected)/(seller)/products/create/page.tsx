@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createProduct, type CreateProductPayload } from "@/lib/api/products.api";
+import { createProduct, uploadProductImages, type CreateProductPayload } from "@/lib/api/products.api";
 import { listCategories } from "@/lib/api/categories.api";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,8 @@ type Notification = { type: "success" | "error"; text: string };
 export default function CreateProductPage() {
     const router = useRouter();
     const [notification, setNotification] = useState<Notification | null>(null);
+    const [images, setImages] = useState<string[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
 
     const categoriesQuery = useQuery({
         queryKey: QUERY_KEYS.categories.list,
@@ -74,13 +76,25 @@ export default function CreateProductPage() {
     });
 
     const createMutation = useMutation({
-        mutationFn: (payload: CreateProductPayload) => createProduct(payload),
+        mutationFn: async (payload: CreateProductPayload) => {
+            const result = await createProduct(payload);
+            if (images.length > 0) {
+                setIsUploading(true);
+                try {
+                    await uploadProductImages(result.product.id, images);
+                } finally {
+                    setIsUploading(false);
+                }
+            }
+            return result;
+        },
         onSuccess: (data) => {
-            setNotification({ type: "success", text: `✅ ${data.message}` });
+            setNotification({ type: "success", text: `✅ Sản phẩm được tạo thành công!` });
             setTimeout(() => router.push("/products"), 1500);
         },
         onError: (error: { message?: string }) => {
             setNotification({ type: "error", text: `❌ ${error?.message ?? "Tạo sản phẩm thất bại"}` });
+            setIsUploading(false);
             setTimeout(() => setNotification(null), 4000);
         },
     });
@@ -127,6 +141,28 @@ export default function CreateProductPage() {
         }
 
         createMutation.mutate(payload);
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length + images.length > 5) {
+            setNotification({ type: "error", text: "❌ Tối đa 5 ảnh" });
+            return;
+        }
+
+        files.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (typeof ev.target?.result === "string") {
+                    setImages((prev) => [...prev, ev.target!.result as string]);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeImage = (index: number) => {
+        setImages((prev) => prev.filter((_, i) => i !== index));
     };
 
     return (
@@ -250,13 +286,45 @@ export default function CreateProductPage() {
                                 )}
                             </div>
 
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Hình ảnh sản phẩm (Tối đa 5 ảnh)</label>
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageChange}
+                                    disabled={images.length >= 5}
+                                />
+                                {images.length > 0 && (
+                                    <div className="grid grid-cols-5 gap-2 mt-2">
+                                        {images.map((img, idx) => (
+                                            <div key={idx} className="relative aspect-square rounded-md overflow-hidden border">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={img} alt={`Preview ${idx}`} className="object-cover w-full h-full" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(idx)}
+                                                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-black/70"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
                             <Button
                                 type="submit"
                                 size="lg"
                                 className="w-full"
-                                disabled={createMutation.isPending}
+                                disabled={createMutation.isPending || isUploading}
                             >
-                                {createMutation.isPending ? "Đang tạo..." : "🚀 Tạo sản phẩm"}
+                                {createMutation.isPending || isUploading
+                                    ? isUploading
+                                        ? "Đang tải ảnh lên..."
+                                        : "Đang tạo cơ sở..."
+                                    : "🚀 Tạo sản phẩm"}
                             </Button>
                         </form>
                     </CardContent>
@@ -271,14 +339,20 @@ export default function CreateProductPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm">
-                        <div>
+                        <div className="space-y-3">
                             <p className="font-medium">{values.title || "Chưa có tiêu đề"}</p>
                             <p className="text-xs text-muted-foreground">
                                 {categories.find((c) => c.id === values.categoryId)?.name || "Chưa chọn danh mục"}
                             </p>
+                            {images.length > 0 && (
+                                <div className="aspect-video w-full overflow-hidden rounded-md border bg-muted">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={images[0]} alt="Main Preview" className="h-full w-full object-cover" />
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             <Badge variant="outline">Start: {formatCurrency(values.startPrice || 0)}</Badge>
                             {values.reservePrice && values.reservePrice > 0 && (
                                 <Badge variant="secondary">Reserve: {formatCurrency(values.reservePrice)}</Badge>
