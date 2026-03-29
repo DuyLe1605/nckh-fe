@@ -5,7 +5,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
 
 const NAV_ITEMS = [
+    { href: ROUTE_CONSTANTS.AUCTIONS_PREFIX, label: "Auctions" },
     { href: ROUTE_CONSTANTS.DASHBOARD, label: "Dashboard" },
+    { href: ROUTE_CONSTANTS.ORDERS, label: "Orders" },
     { href: ROUTE_CONSTANTS.WALLET, label: "Wallet" },
     { href: ROUTE_CONSTANTS.PROFILE, label: "Profile" },
 ] as const;
