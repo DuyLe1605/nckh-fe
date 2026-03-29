@@ -58,3 +58,31 @@ export async function updateUserStatus(id: string, status: UserStatus) {
     );
     return response.data;
 }
+
+export type DashboardRecentOrder = {
+    id: string;
+    finalPrice: number | string;
+    platformFee: number | string;
+    status: string;
+    createdAt: string;
+    buyer: { id: string; fullName: string } | null;
+    product: { id: string; title: string };
+};
+
+export type DashboardAnalyticsResponse = {
+    message: string;
+    data: {
+        totalUsers: number;
+        activeAuctions: number;
+        totalBids: number;
+        totalRevenue: number;
+        recentOrders: DashboardRecentOrder[];
+    };
+};
+
+export async function getAdminDashboardAnalytics() {
+    const response = await apiClient.get<DashboardAnalyticsResponse>(
+        "/admin/analytics/dashboard",
+    );
+    return response.data;
+}

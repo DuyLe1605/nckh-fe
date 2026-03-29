@@ -26,5 +26,6 @@ export const QUERY_KEYS = {
     },
     admin: {
         users: (params?: Record<string, string | number | undefined>) => ["admin", "users", params] as const,
+        dashboard: ["admin", "dashboard"] as const,
     },
 } as const;

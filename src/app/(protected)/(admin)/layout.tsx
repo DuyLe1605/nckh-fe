@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ADMIN_NAV = [
+    { href: "/admin", label: "📊 Thống kê (Dashboard)", match: "/admin" },
     { href: "/users", label: "👥 Quản lý người dùng", match: "/users" },
     { href: "/categories", label: "📁 Quản lý Danh mục", match: "/categories" },
     { href: "/disputes", label: "📋 Báo cáo & Tranh chấp", match: "/disputes" },

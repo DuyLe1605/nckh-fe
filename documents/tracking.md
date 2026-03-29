@@ -86,7 +86,7 @@
 |---------|------|--------|----------|-------|
 | AC-001 | Admin users management UI | ✅ Done | — | Search + role/status filter + ban/suspend/activate |
 | AC-002 | Reports/disputes moderation UI | ✅ Done | — | Review + resolve |
-| AC-003 | Admin analytics dashboard | [ ] Todo | P2 | Charts + stats |
+| AC-003 | Admin analytics dashboard | ✅ Done | — | Charts + stats |
 | AC-004 | Category management UI | ✅ Done | — | Tree CRUD |
 | AC-005 | Admin layout + sidebar | ✅ Done | — | Navigation + active state |
 
@@ -110,9 +110,7 @@
 
 ### 📋 Tiếp theo (Next up)
 
-- [ ] **AC-003** Admin analytics dashboard
-- [ ] **BD-004** Watchlist
-- [ ] Wallet Cash-out review flow
+- [ ] Tạo `proxy.ts` để chặn / routing theo role ở tầng API hoặc Middleware (Extra Task)
 
 ### ✅ Hoàn thành gần đây
 
@@ -137,6 +135,7 @@
 - [x] Admin Layout Sidebar with nav + active state (Phase 5)
 - [x] Category dropdown trên seller product forms (Phase 5)
 - [x] Admin Categories CRUD Management (Phase 6)
+- [x] Admin Analytics Dashboard UI + Recharts (Epic 7)
 
 ### 🎯 Nhiệm vụ thêm (Extra Tasks)
 

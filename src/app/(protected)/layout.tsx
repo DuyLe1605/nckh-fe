@@ -3,16 +3,7 @@ import { CurrentRoleBadge } from "@/components/auth/current-role-badge";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
-
-const NAV_ITEMS = [
-    { href: ROUTE_CONSTANTS.AUCTIONS_PREFIX, label: "Đấu giá" },
-    { href: ROUTE_CONSTANTS.DASHBOARD, label: "Tổng quan" },
-    { href: ROUTE_CONSTANTS.PRODUCTS, label: "Sản phẩm của tôi" },
-    { href: ROUTE_CONSTANTS.ORDERS, label: "Quản lý đơn hàng" },
-    { href: ROUTE_CONSTANTS.MY_ORDERS, label: "Đơn mua" },
-    { href: ROUTE_CONSTANTS.WALLET, label: "Ví tiền" },
-    { href: ROUTE_CONSTANTS.PROFILE, label: "Hồ sơ" },
-] as const;
+import { TopNav } from "@/components/common/top-nav";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -23,13 +14,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
                         <Link href={ROUTE_CONSTANTS.HOME} className="text-sm font-semibold">
                             {APP_CONSTANTS.APP_TITLE}
                         </Link>
-                        <nav className="hidden items-center gap-3 text-sm text-muted-foreground md:flex">
-                            {NAV_ITEMS.map((item) => (
-                                <Link key={item.href} href={item.href} className="transition hover:text-foreground">
-                                    {item.label}
-                                </Link>
-                            ))}
-                        </nav>
+                        <TopNav />
                     </div>
                     <div className="flex items-center gap-2">
                         <CurrentRoleBadge />

@@ -33,6 +33,7 @@ export const ROUTE_CONSTANTS = {
     PROFILE: "/profile",
     AUCTIONS_PREFIX: "/auctions",
     DASHBOARD: "/dashboard",
+    ADMIN: "/admin",
     WALLET: "/wallet",
     PRODUCTS: "/products",
     PRODUCTS_CREATE: "/products/create",
@@ -41,6 +42,7 @@ export const ROUTE_CONSTANTS = {
     USERS: "/users",
     DISPUTES: "/disputes",
 } as const;
+
 
 export const SOCKET_CONSTANTS = {
     JOIN_EVENT: "auction:join",

@@ -3,6 +3,7 @@ import { APP_CONSTANTS, ROUTE_CONSTANTS } from "./src/constants/app.constants";
 
 const PROTECTED_PREFIXES = [
     ROUTE_CONSTANTS.DASHBOARD,
+    ROUTE_CONSTANTS.ADMIN,
     ROUTE_CONSTANTS.WALLET,
     ROUTE_CONSTANTS.PRODUCTS_CREATE,
     ROUTE_CONSTANTS.ORDERS,
@@ -14,7 +15,7 @@ const PROTECTED_PREFIXES = [
 const AUTH_PAGES = [ROUTE_CONSTANTS.LOGIN, ROUTE_CONSTANTS.REGISTER] as const;
 
 const ROLE_HOME_MAP = {
-    [APP_CONSTANTS.ROLE_ADMIN]: ROUTE_CONSTANTS.USERS,
+    [APP_CONSTANTS.ROLE_ADMIN]: ROUTE_CONSTANTS.ADMIN,
     [APP_CONSTANTS.ROLE_SELLER]: ROUTE_CONSTANTS.PRODUCTS_CREATE,
     [APP_CONSTANTS.ROLE_BIDDER]: ROUTE_CONSTANTS.DASHBOARD,
 } as const;
@@ -42,7 +43,7 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(APP_CONSTANTS.LOGIN_PATH, request.url));
     }
 
-    const isAdminRoute = pathname.startsWith(ROUTE_CONSTANTS.USERS) || pathname.startsWith(ROUTE_CONSTANTS.DISPUTES);
+    const isAdminRoute = pathname.startsWith(ROUTE_CONSTANTS.ADMIN) || pathname.startsWith(ROUTE_CONSTANTS.USERS) || pathname.startsWith(ROUTE_CONSTANTS.DISPUTES);
     const isSellerRoute =
         pathname.startsWith(ROUTE_CONSTANTS.PRODUCTS_CREATE) || pathname.startsWith(ROUTE_CONSTANTS.ORDERS);
 
@@ -62,6 +63,7 @@ export const config = {
         "/login",
         "/register",
         "/dashboard/:path*",
+        "/admin/:path*",
         "/wallet/:path*",
         "/products/create/:path*",
         "/orders/:path*",
