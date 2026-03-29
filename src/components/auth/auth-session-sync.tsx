@@ -26,6 +26,7 @@ export function AuthSessionSync() {
                         role: payload.user.role,
                         email: payload.user.email,
                         fullName: payload.user.fullName,
+                        status: payload.user.status,
                     });
                 }
             })

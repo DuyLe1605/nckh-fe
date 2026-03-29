@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod/v4";
 import { toast } from "sonner";
-import { AuthRole, AuthSessionPayload, RegisterRole, login, register } from "@/lib/api/auth.api";
+import { AuthRole, AuthSessionPayload, RegisterRole } from "@/lib/api/auth.api";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
+import { useLoginMutation, useRegisterMutation } from "@/lib/query/hooks/use-auth";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Button } from "@/components/ui/button";
 import { setAccessToken } from "@/lib/auth/session-manager";
 import { setRoleCookie } from "@/lib/auth/role-cookie";
+import { VerifyAccountDialog } from "./verify-account-dialog";
 
 const emailSchema = z.email("Email không hợp lệ");
 const passwordSchema = z.string().min(8, "Mật khẩu tối thiểu 8 ký tự");
@@ -62,6 +63,8 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
     const router = useRouter();
     const { setSession } = useAuthUiStore();
     const [apiMessage, setApiMessage] = useState<string | null>(null);
+    const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+    const [registeredEmail, setRegisteredEmail] = useState("");
 
     const isLoginMode = mode === "login";
     const title = isLoginMode ? "Chào mừng trở lại" : "Tạo tài khoản mới";
@@ -90,59 +93,44 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
         name: "role",
     });
 
-    const loginMutation = useMutation({
-        mutationFn: (payload: LoginFormValues) => login(payload),
-        onSuccess: (session: AuthSessionPayload, variables) => {
-            const role = session.user?.role;
-            const email = session.user?.email ?? variables.email;
+    const loginMutation = useLoginMutation();
+    const registerMutation = useRegisterMutation();
 
-            if (!role) {
-                setApiMessage("Không xác định được role từ backend. Vui lòng thử lại.");
-                toast.error("Đăng nhập thất bại", {
-                    description: "Backend chưa trả role người dùng.",
-                });
-                return;
-            }
+    const handleLoginSuccess = (session: AuthSessionPayload, variables: LoginFormValues) => {
+        const role = session.user?.role;
+        const email = session.user?.email ?? variables.email;
 
-            setRoleCookie(role);
-            setAccessToken(session.accessToken);
-            setSession({
-                id: session.user?.id,
-                role,
-                email,
-                fullName: session.user?.fullName,
+        if (!role) {
+            setApiMessage("Không xác định được role từ backend. Vui lòng thử lại.");
+            toast.error("Đăng nhập thất bại", {
+                description: "Backend chưa trả role người dùng.",
             });
+            return;
+        }
 
+        setRoleCookie(role);
+        setAccessToken(session.accessToken);
+        setSession({
+            id: session.user?.id,
+            role,
+            email,
+            fullName: session.user?.fullName,
+            status: session.user?.status,
+        });
+
+        if (session.user?.status === "UNVERIFIED") {
+            toast.warning("Tài khoản chưa được xác thực", {
+                description: "Vui lòng vào Hồ sơ để xác thực tài khoản của bạn. Các tính năng có thể bị giới hạn.",
+                duration: 10000,
+            });
+        } else {
             toast.success("Đăng nhập thành công", {
                 description: `Xin chào ${session.user?.fullName ?? email}`,
             });
+        }
 
-            router.push(redirectPathByRole(role));
-        },
-        onError: (error: { message?: string }) => {
-            setApiMessage(error?.message ?? "Đăng nhập thất bại. Vui lòng thử lại.");
-            toast.error("Đăng nhập thất bại", {
-                description: error?.message ?? "Vui lòng thử lại.",
-            });
-        },
-    });
-
-    const registerMutation = useMutation({
-        mutationFn: register,
-        onSuccess: () => {
-            setApiMessage("Đăng ký thành công. Mời bạn đăng nhập để tiếp tục.");
-            toast.success("Đăng ký thành công", {
-                description: "Bạn có thể đăng nhập ngay bây giờ.",
-            });
-            router.push(APP_CONSTANTS.LOGIN_PATH);
-        },
-        onError: (error: { message?: string }) => {
-            setApiMessage(error?.message ?? "Đăng ký thất bại. Vui lòng thử lại.");
-            toast.error("Đăng ký thất bại", {
-                description: error?.message ?? "Vui lòng thử lại.",
-            });
-        },
-    });
+        router.push(redirectPathByRole(role));
+    };
 
     const isSubmitting = loginMutation.isPending || registerMutation.isPending;
 
@@ -199,7 +187,15 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                                 return;
                             }
 
-                            loginMutation.mutate(parsed.data);
+                            loginMutation.mutate(parsed.data, {
+                                onSuccess: (session) => handleLoginSuccess(session, parsed.data),
+                                onError: (error: { message?: string }) => {
+                                    setApiMessage(error?.message ?? "Đăng nhập thất bại. Vui lòng thử lại.");
+                                    toast.error("Đăng nhập thất bại", {
+                                        description: error?.message ?? "Vui lòng thử lại.",
+                                    });
+                                },
+                            });
                         })}
                     >
                         <div className="space-y-1.5">
@@ -236,6 +232,15 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                             ) : null}
                         </div>
 
+                        <div className="flex justify-end">
+                            <Link
+                                href={ROUTE_CONSTANTS.FORGOT_PASSWORD}
+                                className="text-sm font-medium text-primary hover:underline"
+                            >
+                                Quên mật khẩu?
+                            </Link>
+                        </div>
+
                         {apiMessage ? <p className="text-sm text-destructive">{apiMessage}</p> : null}
 
                         <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
@@ -262,12 +267,29 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                                 return;
                             }
 
-                            registerMutation.mutate({
-                                fullName: parsed.data.fullName,
-                                email: parsed.data.email,
-                                password: parsed.data.password,
-                                role: parsed.data.role,
-                            });
+                            registerMutation.mutate(
+                                {
+                                    fullName: parsed.data.fullName,
+                                    email: parsed.data.email,
+                                    password: parsed.data.password,
+                                    role: parsed.data.role,
+                                },
+                                {
+                                    onSuccess: (_data, variables) => {
+                                        setRegisteredEmail(variables.email);
+                                        setVerifyDialogOpen(true);
+                                        setApiMessage(
+                                            "Đăng ký thành công. Hệ thống đã gửi mã xác thực 6 số tới email của bạn.",
+                                        );
+                                    },
+                                    onError: (error: { message?: string }) => {
+                                        setApiMessage(error?.message ?? "Đăng ký thất bại. Vui lòng thử lại.");
+                                        toast.error("Đăng ký thất bại", {
+                                            description: error?.message ?? "Vui lòng thử lại.",
+                                        });
+                                    },
+                                },
+                            );
                         })}
                     >
                         <div className="space-y-1.5">
@@ -389,6 +411,23 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                     </Link>
                 </p>
             </section>
+
+            <VerifyAccountDialog
+                open={verifyDialogOpen}
+                onOpenChange={setVerifyDialogOpen}
+                email={registeredEmail}
+                showSkipAction
+                onSkip={() => {
+                    toast.info("Bạn có thể xác thực sau", {
+                        description: "Vào Hồ sơ tài khoản để xác thực email bất cứ lúc nào.",
+                    });
+                    router.push(APP_CONSTANTS.LOGIN_PATH);
+                }}
+                onSuccess={() => {
+                    setVerifyDialogOpen(false);
+                    router.push(APP_CONSTANTS.LOGIN_PATH);
+                }}
+            />
         </div>
     );
 }

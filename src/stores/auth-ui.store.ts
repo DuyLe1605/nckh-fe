@@ -7,8 +7,9 @@ type AuthUiState = {
     currentRole: AuthRole | null;
     currentEmail: string | null;
     currentFullName: string | null;
+    currentStatus: string | null;
     lastHydratedAt: number | null;
-    setSession: (params: { id?: string; role: AuthRole; email: string; fullName?: string }) => void;
+    setSession: (params: { id?: string; role: AuthRole; email: string; fullName?: string; status?: string }) => void;
     clearSession: () => void;
 };
 
@@ -18,14 +19,16 @@ export const useAuthUiStore = create<AuthUiState>((set) => ({
     currentRole: null,
     currentEmail: null,
     currentFullName: null,
+    currentStatus: null,
     lastHydratedAt: null,
-    setSession: ({ id, role, email, fullName }) =>
+    setSession: ({ id, role, email, fullName, status }) =>
         set({
             isAuthenticated: true,
             currentUserId: id ?? null,
             currentRole: role,
             currentEmail: email,
             currentFullName: fullName ?? null,
+            currentStatus: status ?? null,
             lastHydratedAt: Date.now(),
         }),
     clearSession: () =>
@@ -35,6 +38,7 @@ export const useAuthUiStore = create<AuthUiState>((set) => ({
             currentRole: null,
             currentEmail: null,
             currentFullName: null,
+            currentStatus: null,
             lastHydratedAt: null,
         }),
 }));

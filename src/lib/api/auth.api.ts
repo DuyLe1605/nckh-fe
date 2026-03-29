@@ -10,6 +10,7 @@ export type AuthUser = {
     email: string;
     role: AuthRole;
     fullName?: string;
+    status?: "UNVERIFIED" | "ACTIVE" | "BANNED" | "SUSPENDED" | string;
 };
 
 export type AuthSessionPayload = {
@@ -45,7 +46,7 @@ function normalizeAuthResponse<TPayload>(
 ): AuthSessionPayload {
     const fallbackUser =
         fallback?.email && fallback?.role
-            ? { email: fallback.email, role: fallback.role, fullName: fallback.fullName }
+            ? { email: fallback.email, role: fallback.role, fullName: fallback.fullName, status: fallback.status }
             : null;
 
     return {
@@ -106,4 +107,27 @@ export async function logoutAllDevices() {
     return {
         message: response.data.message ?? "Logged out from all devices",
     };
+}
+
+export async function verifyEmail(payload: { email: string; otp: string }) {
+    const response = await apiClient.post<{ message?: string }>(APP_CONSTANTS.AUTH_VERIFY_EMAIL_ENDPOINT, payload);
+    return { message: response.data.message ?? "Verified successfully" };
+}
+
+export async function resendVerification(payload: { email: string }) {
+    const response = await apiClient.post<{ message?: string }>(
+        APP_CONSTANTS.AUTH_RESEND_VERIFICATION_ENDPOINT,
+        payload,
+    );
+    return { message: response.data.message ?? "Verification email resent" };
+}
+
+export async function forgotPassword(payload: { email: string }) {
+    const response = await apiClient.post<{ message?: string }>(APP_CONSTANTS.AUTH_FORGOT_PASSWORD_ENDPOINT, payload);
+    return { message: response.data.message ?? "Recovery email sent" };
+}
+
+export async function resetPassword(payload: { email: string; otp: string; newPassword: string }) {
+    const response = await apiClient.post<{ message?: string }>(APP_CONSTANTS.AUTH_RESET_PASSWORD_ENDPOINT, payload);
+    return { message: response.data.message ?? "Password reset successfully" };
 }

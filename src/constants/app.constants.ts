@@ -14,10 +14,14 @@ export const APP_CONSTANTS = {
     AUTH_LOGOUT_ENDPOINT: "/auth/logout",
     AUTH_LOGOUT_ALL_ENDPOINT: "/auth/logout-all",
     AUTH_ME_ENDPOINT: "/auth/me",
-    AUTH_BROADCAST_CHANNEL: "nckh-auth",
+    AUTH_VERIFY_EMAIL_ENDPOINT: "/auth/verify-email",
+    AUTH_RESEND_VERIFICATION_ENDPOINT: "/auth/resend-verification",
+    AUTH_FORGOT_PASSWORD_ENDPOINT: "/auth/forgot-password",
+    AUTH_RESET_PASSWORD_ENDPOINT: "/auth/reset-password",
+    AUTH_BROADCAST_CHANNEL: "aurelia-auth",
     TOKEN_REFRESH_GRACE_MS: 30_000,
-    APP_TITLE: "Đấu Giá Trực Tuyến",
-    APP_SUBTITLE: "Nền tảng đấu giá thời gian thực",
+    APP_TITLE: "Aurelia Auctions",
+    APP_SUBTITLE: "Nền tảng đấu giá thời gian thực cho doanh nghiệp",
     PAGINATION_MIN_PAGE: 1,
     PAGINATION_MIN_PAGE_SIZE: 1,
     PAGINATION_MAX_PAGE_SIZE: 100,
@@ -30,6 +34,7 @@ export const ROUTE_CONSTANTS = {
     HOME: "/",
     LOGIN: "/login",
     REGISTER: "/register",
+    FORGOT_PASSWORD: "/forgot-password",
     PROFILE: "/profile",
     AUCTIONS_PREFIX: "/auctions",
     DASHBOARD: "/dashboard",
@@ -42,7 +47,6 @@ export const ROUTE_CONSTANTS = {
     USERS: "/users",
     DISPUTES: "/disputes",
 } as const;
-
 
 export const SOCKET_CONSTANTS = {
     JOIN_EVENT: "auction:join",

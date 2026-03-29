@@ -1,4 +1,4 @@
-const DEVICE_ID_KEY = "nckh_device_id";
+const DEVICE_ID_KEY = "aurelia_device_id";
 
 function generateDeviceId() {
     return `web_${crypto.randomUUID()}`;

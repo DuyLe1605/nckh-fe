@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { me, logoutAllDevices } from "@/lib/api/auth.api";
+import { me, logout, logoutAllDevices } from "@/lib/api/auth.api";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
 import { useRouter } from "next/navigation";
 import { APP_CONSTANTS, ROUTE_CONSTANTS } from "@/constants/app.constants";
@@ -20,6 +20,21 @@ export function useLogoutAllMutation() {
 
     return useMutation({
         mutationFn: logoutAllDevices,
+        onSettled: () => {
+            document.cookie = `${APP_CONSTANTS.COOKIE_ROLE_KEY}=; path=/; max-age=0`;
+            clearAccessToken();
+            clearSession();
+            router.push(ROUTE_CONSTANTS.LOGIN);
+        },
+    });
+}
+
+export function useLogoutMutation() {
+    const router = useRouter();
+    const clearSession = useAuthUiStore((s) => s.clearSession);
+
+    return useMutation({
+        mutationFn: logout,
         onSettled: () => {
             document.cookie = `${APP_CONSTANTS.COOKIE_ROLE_KEY}=; path=/; max-age=0`;
             clearAccessToken();
