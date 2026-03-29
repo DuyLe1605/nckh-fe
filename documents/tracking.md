@@ -26,15 +26,15 @@
 
 | Task ID | Task | Status | Priority | Notes |
 |---------|------|--------|----------|-------|
-| A-001 | Login form + API integration | 🔄 ~90% | P0 | Token handling works |
-| A-002 | Register form (BIDDER/SELLER role select) | 🔄 ~90% | P0 | Role picker UI |
-| A-003 | Refresh token flow (multi-tab safe) | 🔄 ~80% | P0 | Race condition mitigated |
+| A-001 | Login form + API integration | ✅ Done | — | Token handling works |
+| A-002 | Register form (BIDDER/SELLER role select) | ✅ Done | — | Role picker UI |
+| A-003 | Refresh token flow (multi-tab safe) | ✅ Done | — | Race condition mitigated |
 | A-004 | Logout / Logout all devices | ✅ Done | — | API call + cookie clear |
 | A-005 | Profile/session state (Zustand) | ✅ Done | — | Non-sensitive only |
 | A-006 | Middleware role guard | ✅ Done | — | Admin/Seller/Bidder zones |
-| A-007 | ⚡ Auth store: thêm `currentUserId` | [~] Fix | **P0** | ĐANG SỬA: cần userId cho LiveBidPanel |
-| A-008 | ⚡ Auth type: thêm `id` for user | [~] Fix | **P0** | Auth API type update |
-| A-009 | SUPER_ADMIN role support (FE constants) | [ ] Todo | P1 | Enum + route guard update |
+| A-007 | ⚡ Auth store: thêm `currentUserId` | ✅ Done | — | Zustand store đã có currentUserId |
+| A-008 | ⚡ Auth type: thêm `id` for user | ✅ Done | — | AuthUser type có `id?` |
+| A-009 | SUPER_ADMIN role support (FE constants) | ✅ Done | — | AuthRole type đã có SUPER_ADMIN |
 
 ## Epic 3 — Public Auction Browsing
 
@@ -42,8 +42,8 @@
 |---------|------|--------|----------|-------|
 | PB-001 | Auctions list page (/auctions) | ✅ Done | — | Filter/sort/pagination |
 | PB-002 | Auction detail page (/auctions/:id) | ✅ Done | — | Product info + LiveBidPanel |
-| PB-003 | ⚡ Fix: truyền currentUserId → LiveBidPanel | [~] Fix | **P0** | ĐANG SỬA: Buyer thấy bid form |
-| PB-004 | ⚡ Fix: effectiveEndTime prop sai | [~] Fix | **P0** | Dùng endTime thay effectiveEndTime |
+| PB-003 | ⚡ Fix: truyền currentUserId → LiveBidPanel | ✅ Done | — | useAuthUiStore → prop |
+| PB-004 | ⚡ Fix: effectiveEndTime prop đúng | ✅ Done | — | effectiveEndTime ?? endTime |
 | PB-005 | Skeleton/loading/error states | ✅ Done | — | Skeleton UI exists |
 | PB-006 | Trang chủ (/) hero + featured auctions | 🔄 Basic | P2 | Cần redesign |
 
@@ -51,21 +51,21 @@
 
 | Task ID | Task | Status | Priority | Notes |
 |---------|------|--------|----------|-------|
-| LB-001 | LiveBidPanel component | 🔄 ~70% | **P0** | Price, form, history |
+| LB-001 | LiveBidPanel component | ✅ Done | — | Price, form, history, outbid |
 | LB-002 | Bid form (amount input + submit) | ✅ Done | — | Mutation working |
 | LB-003 | Real-time price update (WS) | ✅ Done | — | onBidUpdate handler |
 | LB-004 | Countdown timer | ✅ Done | — | useCountdown hook |
-| LB-005 | ⚡ Countdown reads effectiveEndTime đúng | [~] Fix | **P0** | Nhận WS event update timer |
-| LB-006 | Outbid notification banner | 🔄 ~60% | P0 | Needs currentUserId |
+| LB-005 | ⚡ Countdown reads effectiveEndTime đúng | ✅ Done | — | WS event updates liveEndTime |
+| LB-006 | Outbid notification banner | ✅ Done | — | prevWinnerBidderId check |
 | LB-007 | Reconnect + fallback polling | [ ] Todo | P1 | Socket disconnect handler |
-| LB-008 | Bid history query (no auth required) | [~] Fix | **P0** | Cần BE fix trước |
+| LB-008 | Bid history query (no auth required) | ✅ Done | — | OptionalAccessTokenGuard on BE |
 
 ## Epic 5 — Bidder Workflows
 
 | Task ID | Task | Status | Priority | Notes |
 |---------|------|--------|----------|-------|
-| BD-001 | Bidder dashboard (winning/outbid tabs) | 🔄 Mock ~30% | P1 | Cần API thật |
-| BD-002 | Wallet page (balance + deposit) | 🔄 Mock ~20% | P1 | Cần API integration |
+| BD-001 | Bidder dashboard (winning/outbid tabs) | [~] Đang làm | **P0** | Chuyển mock → real API |
+| BD-002 | Wallet page (balance + deposit) | [~] Đang làm | **P0** | Chuyển skeleton → real API |
 | BD-003 | Order history (buyer view) | [ ] Todo | P1 | After order API ready |
 | BD-004 | Watchlist | [ ] Todo | P2 | Save favorite auctions |
 
@@ -76,7 +76,7 @@
 | SL-001 | Seller create product form | 🔄 Mock ~40% | P1 | Form UI exists, no API |
 | SL-002 | Seller edit product form | 🔄 Mock ~30% | P1 | Needs API integration |
 | SL-003 | Seller "my products" list | 🔄 Mock ~20% | P1 | Needs sellerId filter API |
-| SL-004 | Seller orders management | 🔄 Mock ~15% | P1 | Ship action |
+| SL-004 | Seller orders management | [~] Đang làm | **P0** | Chuyển mock → real API |
 | SL-005 | Seller revenue overview | [ ] Todo | P2 | After order system |
 
 ## Epic 7 — Admin Console
@@ -105,25 +105,26 @@
 
 ### 🔥 Đang làm (In Progress)
 
-- [~] **A-007** Auth store: thêm `currentUserId` field cả type lẫn store
-- [~] **A-008** Auth API type: thêm `id` to AuthUser type
-- [~] **PB-003** Auction detail page: truyền `currentUserId` vào LiveBidPanel
-- [~] **PB-004** Fix `effectiveEndTime` prop (hiện dùng sai `endTime`)
-- [~] **LB-005** LiveBidPanel: nhận WS event cập nhật effectiveEndTime
-- [~] **LB-008** Bid history: đảm bảo query hoạt động khi BE allow public
+- [~] **BD-001** Bidder dashboard kết nối API thật (thay mock)
+- [~] **BD-002** Wallet page kết nối API thật (thay skeleton)
+- [~] **SL-004** Seller orders kết nối API thật (thay mock)
 
 ### 📋 Tiếp theo (Next up)
 
-- [ ] **BD-001** Bidder dashboard kết nối API thật
+- [ ] **BD-003** Order history (buyer view)
 - [ ] **SL-001** Seller create product kết nối API thật
-- [ ] **BD-002** Wallet page kết nối API thật
-- [ ] **A-009** SUPER_ADMIN role support
+- [ ] **SL-003** Seller "my products" list kết nối API
+- [ ] **AC-001** Admin users management UI
 
 ### ✅ Hoàn thành gần đây
 
 - [x] Sprint 1 scaffolding hoàn chỉnh
 - [x] Auth UI + dark mode + data layer foundation
 - [x] Auctions list/detail pages with real API
-- [x] LiveBidPanel core UI (price, countdown, history skeleton)
+- [x] LiveBidPanel full (price, countdown, history, outbid, WS)
 - [x] Header role badge + status badges
 - [x] Middleware RBAC route guard
+- [x] Auth store: currentUserId + AuthUser.id
+- [x] Bid history query (public, no auth required)
+- [x] SUPER_ADMIN role type support
+- [x] effectiveEndTime WS update working
