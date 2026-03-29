@@ -28,6 +28,7 @@ export const APP_CONSTANTS = {
     ROLE_BIDDER: "BIDDER",
     ROLE_ADMIN: "ADMIN",
     ROLE_SELLER: "SELLER",
+    ROLE_SUPER_ADMIN: "SUPER_ADMIN",
 } as const;
 
 export const ROUTE_CONSTANTS = {

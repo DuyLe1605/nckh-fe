@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getMyWallet, deposit } from "@/lib/api/wallets.api";
 import { QUERY_KEYS } from "@/lib/query/query-keys";
-import { toast } from "sonner";
+import { useAuthUiStore } from "@/stores/auth-ui.store";
 
 export function useMyWalletQuery() {
+    const isAuthenticated = useAuthUiStore((s) => s.isAuthenticated);
+
     return useQuery({
         queryKey: QUERY_KEYS.wallets.me,
         queryFn: getMyWallet,
         staleTime: 10_000,
+        enabled: isAuthenticated,
     });
 }
 

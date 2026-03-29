@@ -54,7 +54,7 @@ const REGISTER_ROLE_OPTIONS: Array<{ value: RegisterRole; label: string; hint: s
 ];
 
 function redirectPathByRole(role: AuthRole) {
-    if (role === APP_CONSTANTS.ROLE_ADMIN) return ROUTE_CONSTANTS.USERS;
+    if (role === APP_CONSTANTS.ROLE_ADMIN || role === APP_CONSTANTS.ROLE_SUPER_ADMIN) return ROUTE_CONSTANTS.USERS;
     if (role === APP_CONSTANTS.ROLE_SELLER) return ROUTE_CONSTANTS.PRODUCTS_CREATE;
     return ROUTE_CONSTANTS.DASHBOARD;
 }

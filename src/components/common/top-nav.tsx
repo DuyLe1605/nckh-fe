@@ -13,7 +13,7 @@ export function TopNav() {
 
     switch (currentRole) {
         case APP_CONSTANTS.ROLE_ADMIN:
-        case "SUPER_ADMIN":
+        case APP_CONSTANTS.ROLE_SUPER_ADMIN:
             items = [
                 { href: ROUTE_CONSTANTS.AUCTIONS_PREFIX, label: "Tất cả đấu giá" },
                 { href: "/admin", label: "Admin Panel" },

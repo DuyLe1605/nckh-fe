@@ -12,7 +12,7 @@ async function handleProxy(req: NextRequest, { params }: { params: Promise<{ pat
 
     // Optional Role Routing / Blocking logic
     // Example: Block Admin APIs from non-admin users at the Edge middleware level
-    if (path.startsWith("admin") && role !== APP_CONSTANTS.ROLE_ADMIN) {
+    if (path.startsWith("admin") && role !== APP_CONSTANTS.ROLE_ADMIN && role !== APP_CONSTANTS.ROLE_SUPER_ADMIN) {
         return NextResponse.json({ message: "Forbidden API access" }, { status: 403 });
     }
 
