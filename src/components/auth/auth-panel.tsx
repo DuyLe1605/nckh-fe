@@ -13,7 +13,6 @@ import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { Button } from "@/components/ui/button";
 import { setAccessToken } from "@/lib/auth/session-manager";
 import { setRoleCookie } from "@/lib/auth/role-cookie";
-import { VerifyAccountDialog } from "./verify-account-dialog";
 
 const emailSchema = z.email("Email không hợp lệ");
 const passwordSchema = z.string().min(8, "Mật khẩu tối thiểu 8 ký tự");
@@ -63,8 +62,6 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
     const router = useRouter();
     const { setSession } = useAuthUiStore();
     const [apiMessage, setApiMessage] = useState<string | null>(null);
-    const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-    const [registeredEmail, setRegisteredEmail] = useState("");
 
     const isLoginMode = mode === "login";
     const title = isLoginMode ? "Chào mừng trở lại" : "Tạo tài khoản mới";
@@ -276,10 +273,14 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                                 },
                                 {
                                     onSuccess: (_data, variables) => {
-                                        setRegisteredEmail(variables.email);
-                                        setVerifyDialogOpen(true);
                                         setApiMessage(
                                             "Đăng ký thành công. Hệ thống đã gửi mã xác thực 6 số tới email của bạn.",
+                                        );
+                                        toast.success("Đăng ký thành công", {
+                                            description: "Vui lòng xác thực email để kích hoạt đầy đủ tính năng.",
+                                        });
+                                        router.push(
+                                            `${ROUTE_CONSTANTS.VERIFY_ACCOUNT}?email=${encodeURIComponent(variables.email)}&from=register`,
                                         );
                                     },
                                     onError: (error: { message?: string }) => {
@@ -411,23 +412,6 @@ export function AuthPanel({ mode }: { mode: AuthPanelMode }) {
                     </Link>
                 </p>
             </section>
-
-            <VerifyAccountDialog
-                open={verifyDialogOpen}
-                onOpenChange={setVerifyDialogOpen}
-                email={registeredEmail}
-                showSkipAction
-                onSkip={() => {
-                    toast.info("Bạn có thể xác thực sau", {
-                        description: "Vào Hồ sơ tài khoản để xác thực email bất cứ lúc nào.",
-                    });
-                    router.push(APP_CONSTANTS.LOGIN_PATH);
-                }}
-                onSuccess={() => {
-                    setVerifyDialogOpen(false);
-                    router.push(APP_CONSTANTS.LOGIN_PATH);
-                }}
-            />
         </div>
     );
 }

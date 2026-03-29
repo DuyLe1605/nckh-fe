@@ -98,13 +98,13 @@
 
 ## Epic 8 — Quality & Performance
 
-| Task ID | Task                        | Status   | Priority | Notes                |
-| ------- | --------------------------- | -------- | -------- | -------------------- |
+| Task ID | Task                        | Status      | Priority | Notes                            |
+| ------- | --------------------------- | ----------- | -------- | -------------------------------- |
 | QP-001  | Unit tests (hooks, utils)   | [~] Partial | P2       | Auth/Profile hooks: 9 tests pass |
-| QP-002  | E2E tests (auth + bid flow) | [ ] Todo | P2       | Playwright/Cypress   |
-| QP-003  | Error boundaries            | [ ] Todo | P2       | Graceful error UI    |
-| QP-004  | Bundle optimization         | [ ] Todo | P3       | Code splitting       |
-| QP-005  | Dockerfile frontend         | [ ] Todo | P2       | Production config    |
+| QP-002  | E2E tests (auth + bid flow) | [ ] Todo    | P2       | Playwright/Cypress               |
+| QP-003  | Error boundaries            | [ ] Todo    | P2       | Graceful error UI                |
+| QP-004  | Bundle optimization         | [ ] Todo    | P3       | Code splitting                   |
+| QP-005  | Dockerfile frontend         | [ ] Todo    | P2       | Production config                |
 
 ---
 

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ROUTE_CONSTANTS } from "@/constants/app.constants";
 import { useProfileQuery, useLogoutAllMutation } from "@/lib/query/hooks/use-profile";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { VerifyAccountDialog } from "@/components/auth/verify-account-dialog";
 import { useAuthUiStore } from "@/stores/auth-ui.store";
 import { ShieldCheck, Mail, UserRound, CheckCircle2, AlertTriangle, RefreshCcw, Laptop } from "lucide-react";
 
 export default function ProfilePage() {
+    const router = useRouter();
     const { currentEmail, currentRole, currentFullName, currentStatus, isAuthenticated, setSession } = useAuthUiStore();
 
     const profileQuery = useProfileQuery();
@@ -26,8 +28,6 @@ export default function ProfilePage() {
         });
     }, [profileQuery.data?.user, setSession]);
 
-    const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-
     const logoutAllMutation = useLogoutAllMutation();
 
     const email = profileQuery.data?.user?.email ?? currentEmail;
@@ -43,6 +43,11 @@ export default function ProfilePage() {
             .slice(0, 2)
             .map((chunk) => chunk[0]?.toUpperCase())
             .join("") ?? "U";
+
+    const openVerifyPage = () => {
+        const query = email ? `?email=${encodeURIComponent(email)}&from=profile` : "?from=profile";
+        router.push(`${ROUTE_CONSTANTS.VERIFY_ACCOUNT}${query}`);
+    };
 
     if (profileQuery.isPending && !email) {
         return (
@@ -113,7 +118,7 @@ export default function ProfilePage() {
 
                     <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
                         {isUnverified ? (
-                            <Button onClick={() => setVerifyDialogOpen(true)}>
+                            <Button onClick={openVerifyPage}>
                                 <ShieldCheck className="mr-2 h-4 w-4" />
                                 Xác thực tài khoản
                             </Button>
@@ -163,7 +168,7 @@ export default function ProfilePage() {
                             </span>
                         </p>
                         {isUnverified ? (
-                            <Button size="sm" variant="outline" onClick={() => setVerifyDialogOpen(true)}>
+                            <Button size="sm" variant="outline" onClick={openVerifyPage}>
                                 Xác thực ngay
                             </Button>
                         ) : (
@@ -191,17 +196,6 @@ export default function ProfilePage() {
                     </div>
                 </article>
             </div>
-
-            {email && (
-                <VerifyAccountDialog
-                    open={verifyDialogOpen}
-                    onOpenChange={setVerifyDialogOpen}
-                    email={email}
-                    onSuccess={() => {
-                        profileQuery.refetch();
-                    }}
-                />
-            )}
         </section>
     );
 }
