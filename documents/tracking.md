@@ -58,7 +58,7 @@
 | LB-004 | Countdown timer | ✅ Done | — | useCountdown hook |
 | LB-005 | ⚡ Countdown reads effectiveEndTime đúng | ✅ Done | — | WS event updates liveEndTime |
 | LB-006 | Outbid notification banner | ✅ Done | — | prevWinnerBidderId check |
-| LB-007 | Reconnect + fallback polling | [ ] Todo | P1 | Socket disconnect handler |
+| LB-007 | Reconnect + fallback polling | ✅ Done | — | useAuctionSocket fallback logic |
 | LB-008 | Bid history query (no auth required) | ✅ Done | — | OptionalAccessTokenGuard on BE |
 
 ## Epic 5 — Bidder Workflows
@@ -110,10 +110,12 @@
 
 ### 📋 Tiếp theo (Next up)
 
-- [ ] Tạo `proxy.ts` để chặn / routing theo role ở tầng API hoặc Middleware (Extra Task)
+- (trống)
 
 ### ✅ Hoàn thành gần đây
 
+- [x] LB-007: Fallback polling khi Socket.IO mất kết nối
+- [x] Tạo proxy.ts chặn hiển thị theo role
 - [x] Sprint 1 scaffolding hoàn chỉnh
 - [x] Auth UI + dark mode + data layer foundation
 - [x] Auctions list/detail pages with real API

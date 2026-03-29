@@ -26,7 +26,7 @@ function isValidRole(role: string | undefined): role is (typeof VALID_ROLES)[num
     return !!role && VALID_ROLES.includes(role as (typeof VALID_ROLES)[number]);
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
     const isAuthPage = AUTH_PAGES.some((page) => pathname === page);
